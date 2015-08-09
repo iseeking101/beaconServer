@@ -76,7 +76,7 @@ app.get('/', function(req, res) {
 app.post('/getMember',urlencodedParser,function(req,res){
 	//無效
 	console.log('session.user = '+req.session.user);
-	var whereName = {"user" : req.body.user,detail{'$exists':true}};
+	var whereName = {"user" : req.body.user,detail:{$exists:true}};
 	var collection = myDB.collection('login');
 	collection.find(whereName).toArray(function(err, docs) {
 		if(err){
