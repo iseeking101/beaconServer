@@ -127,9 +127,8 @@ app.post('/login',urlencodedParser,function(req,res){
   var user_password = md5(req.body.password);
   if (!req.body) return res.sendStatus(400)
   //設定query條件
-  var whereMf ={"user": user_name,"password": user_password,"comfirm":1};
+  var whereMf ={"user": user_name,"password": user_password};
   var collection = myDB.collection('login');
-  //暫時只判斷有沒有查到資料,不做json解析，所以做兩次select，第一次用來確認帳號有無開通，第二次確認帳密有無正確
 	collection.find(whereMf).toArray(function(err, docs) {
 		if (err) {
 			res.status(406).send(err);
