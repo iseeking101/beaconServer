@@ -108,26 +108,8 @@ app.post('/updateMember',urlencodedParser,function(req,res){
 	var userAddress = req.body.userAddress;
  	var collection = myDB.collection('login');
 	var whereName = {"user": user};
-	var abc = collection.find(whereName).toArray(function(err,docs){
-		if(err){
-			res.send("There was a problem adding the information to the database.");
-		    console.log(err);	
-		}else{
-			abc.detail = {"userName":userName,"userPhone":userPhone,"userAddress":userAddress};
-			collection.save(abc),function(err){
-				if(err){
-					res.send("There was a problem adding the information to the database.");
-					console.log(err);	
-				}else{
-					res.type("text/plain");
-					res.status(200).send("ok");
-					res.end();
-				}
-			};
-		}
-	});
 	
-	/*collection.update(whereName, {$set: {"detail":{"userName":userName,"userPhone":userPhone,"userAddress":userAddress}}},  function(err) {
+	collection.update(whereName, {$set: {"detail":{"userName":userName,"userPhone":userPhone,"userAddress":userAddress}}},  function(err) {
       if(err){
 		    res.send("There was a problem adding the information to the database.");
 		    console.log(err);		
@@ -136,7 +118,7 @@ app.post('/updateMember',urlencodedParser,function(req,res){
 			res.status(200).send("ok");
 			res.end();	
 		}
-    });*/
+    });
 });
 
 
