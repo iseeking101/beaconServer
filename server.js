@@ -59,11 +59,14 @@ http.get("/logout", function(req, res){
 */
 
 app.get('/', function(req, res) {
-	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/login" method="post">' +
+	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/updateMember" method="post">' +
                'Enter your name:' +
                '<input type="text" name="user" placeholder="..." />' +
 			   '<input type="text" name="password" placeholder="..." />' +
 			   '<input type="text" name="email" placeholder="..." />' +
+			   '<input type="text" name="userName" placeholder="name" />' +
+			   '<input type="text" name="userPhone" placeholder="phone" />' +
+			   '<input type="text" name="userAddress" placeholder="address" />' +
                '<br>' +
                '<button type="submit">Submit</button>' +
             '</form>';
@@ -111,10 +114,16 @@ app.post('/updateMember',urlencodedParser,function(req,res){
 		    console.log(err);	
 		}else{
 			abc.detail = {"userName":userName,"userPhone":userPhone,"userAddress":userAddress};
-			collection.save(abc);
-			res.type("text/plain");
-			res.status(200).send("ok");
-			res.end();	
+			collection.save(abc),function(err){
+				if(err){
+					res.send("There was a problem adding the information to the database.");
+					console.log(err);	
+				}else{
+					res.type("text/plain");
+					res.status(200).send("ok");
+					res.end();
+				}
+			};
 		}
 	});
 	
@@ -223,7 +232,12 @@ app.post('/register',urlencodedParser,function(req,res){
         "password" : md5(user_password),
 		"email" : user_email,
 		"comfirm" : 0,
-		"mf" : mf
+		"mf" : mf,
+		"detail" : {
+			"userName":"",
+			"userPhone":"",
+			"userAddress":""
+		}
 		
     }, function (err, doc) {
         if (err) {
