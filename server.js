@@ -105,7 +105,7 @@ app.post('/updateMember',urlencodedParser,function(req,res){
 	var userAddress = req.body.userAddress;
  	var collection = myDB.collection('login');
 	var whereName = {"user": user};
-	collection.update(whereName, {$set: {"detail":{"userName":userName,"userPhone":userPhone,"userAddress":userAddress}}},  function(err) {
+	collection.update(whereName, {objNew:true},{$set: {"detail":{"userName":userName,"userPhone":userPhone,"userAddress":userAddress}}},  function(err) {
       if(err){
 		    res.send("There was a problem adding the information to the database.");
 		    console.log(err);		
