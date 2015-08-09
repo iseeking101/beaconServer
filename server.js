@@ -76,19 +76,25 @@ app.get('/', function(req, res) {
 app.post('/getMember',urlencodedParser,function(req,res){
 	//無效
 	console.log('session.user = '+req.session.user);
-	var whereName = {"user" : req.body.user};
+	var whereName = {"user" : req.body.user,detail{'$exists':true}};
 	var collection = myDB.collection('login');
 	collection.find(whereName).toArray(function(err, docs) {
 		if(err){
 			res.status(406).send(err);
 			res.end();
 		}else{
+			if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
 			res.type('application/json');
 			var jsonData = JSON.stringify(docs);
 			var jsonObj = JSON.parse(jsonData);
 			console.log(jsonObj[0].detail.userName);
 			res.status(200).send(docs);
 			res.end();
+			}else{
+				res.type('text/plain');
+				res.status(200).send("no detail");
+				res.end();
+			}
 		}
 	});
 });
