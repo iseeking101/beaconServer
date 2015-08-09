@@ -59,7 +59,7 @@ http.get("/logout", function(req, res){
 */
 
 app.get('/', function(req, res) {
-	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/getMember" method="post">' +
+	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/login" method="post">' +
                'Enter your name:' +
                '<input type="text" name="user" placeholder="..." />' +
 			   '<input type="text" name="password" placeholder="..." />' +
