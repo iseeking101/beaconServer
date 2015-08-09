@@ -108,8 +108,61 @@ app.post('/updateMember',urlencodedParser,function(req,res){
 	var userAddress = req.body.userAddress;
  	var collection = myDB.collection('login');
 	var whereName = {"user": user};
+
 	
-	collection.update(whereName, {$set: {"detail":{"userName":userName,"userPhone":userPhone,"userAddress":userAddress}}},  function(err) {
+	collection.find(whereName).toArray(function(err, docs) {
+		if(err){
+			res.status(406).send(err);
+			res.end();
+		}else{
+			if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
+				var jsonData = JSON.stringify(docs);
+				var jsonObj = JSON.parse(jsonData);
+				var updateArray = [];
+				var updateSet = "{";
+				if(jsonObj[0].detail.userName !== userName){
+					updateArray[0]="\"userName\":"+userName;
+				}
+				if(jsonObj[0].detail.userPhone !== userPhone){
+					updateArray[1]="\"userPhone\":"+userPhone;
+				}
+				if(jsonObj[0].detail.userAddress !== userAddress){
+					updateArray[2]="\"userAddress\":"+userAddress;
+				}
+				if(jsonObj[0].detail.reward !== reward){
+					updateArray[3]="\"reward\":"+reward;
+				}
+				if(updateArray.length()> 0){
+					for(var i = 0; i < updateArray.length();i++){
+						updateSet += updateArray[i];
+						if(i < updateArray.length()-1){
+							updateSet +=","
+						}else{
+							updateSet += "}"
+						}
+					}
+					collection.update(whereName, {$set: {"detail":updateSet}},  function(err) {
+						if(err){
+							res.send("There was a problem adding the information to the database.");
+							console.log(err);		
+						}else{
+							res.type("text/plain");
+							res.status(200).send("ok");
+							res.end();	
+						}
+					});
+				}else{
+					res.type("text/plain");
+					res.status(200).send("ok");
+					res.end();
+				}
+				
+				
+				
+			}
+		}
+	});
+	/*collection.update(whereName, {$set: {"detail":{"userName":userName,"userPhone":userPhone,"userAddress":userAddress}}},  function(err) {
       if(err){
 		    res.send("There was a problem adding the information to the database.");
 		    console.log(err);		
@@ -118,7 +171,7 @@ app.post('/updateMember',urlencodedParser,function(req,res){
 			res.status(200).send("ok");
 			res.end();	
 		}
-    });
+    });*/
 });
 
 
@@ -210,6 +263,7 @@ app.post('/register',urlencodedParser,function(req,res){
 		}
 	});
 	collection.insert({
+		"id":"",
         "user" : user_name,
         "password" : md5(user_password),
 		"email" : user_email,
@@ -218,9 +272,10 @@ app.post('/register',urlencodedParser,function(req,res){
 		"detail" : {
 			"userName":"",
 			"userPhone":"",
-			"userAddress":""
-		}
-		
+			"userAddress":"",
+			"pic":"",
+			"reward":""
+		},		
     }, function (err, doc) {
         if (err) {
             // If it failed, return error
