@@ -313,10 +313,10 @@ app.post('/register',urlencodedParser,function(req,res){
 			"userAddress":"",
 			"reward":""
 		},
-		"old_detail":[{
+		"old_detail":{
 			
 			
-		}]
+		}
     }, function (err, doc) {
         if (err) {
             // If it failed, return error
