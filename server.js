@@ -116,12 +116,12 @@ app.post('/groupService',urlencodedParser,function(req,res){
 		    }else{
 		        if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
 					res.type("text/plain");
-					res.status(200).send(groupMemberv+"has exist");
-					var jsonData = JSON.stringify(docs);
-					var jsonObj = JSON.parse(jsonData);
-					for(var i =0;i<jsonObj[0].old_detail.groupMember.length;i++){
-						console.log(jsonObj[0].old_detail.groupMember[i]);
-					}
+					res.status(200).send("exist");
+					// var jsonData = JSON.stringify(docs);
+					// var jsonObj = JSON.parse(jsonData);
+					// for(var i =0;i<jsonObj[0].old_detail.groupMember.length;i++){
+					// 	console.log(jsonObj[0].old_detail.groupMember[i]);
+					// }
 					
 					res.end();	
 				}else{
