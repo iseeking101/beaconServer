@@ -60,12 +60,12 @@ http.get("/logout", function(req, res){
 */
 
 app.get('/', function(req, res) {
-	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/groupService" method="post">' +
+	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/updateBeaconId" method="post">' +
                'Enter your name:' +
                '<input type="text" name="user" placeholder="..." />' +
 			   //'<input type="text" name="password" placeholder="..." />' +
 			   '<input type="text" name="status" placeholder="..." />' +
-			   '<input type="text" name="groupMember" placeholder="..." />' +
+			   '<input type="text" name="beaconId" placeholder="..." />' +
 			   
                '<br>' +
                '<button type="submit">Submit</button>' +
@@ -223,7 +223,7 @@ app.post('/updateOld',urlencodedParser,function(req,res){
  	var collection = myDB.collection('login');
 	var whereName = {"user": user};
 //
-	collection.update(whereName, {$set: {"old_detail":{"beaconId":beaconId,"oldName":oldName,"oldCharacteristic":oldCharacteristic,"oldhistory":oldhistory,"oldclothes":oldclothes,"oldaddr":oldaddr}}},  function(err) {
+	collection.update(whereName, {$set: {"old_detail.oldName":oldName,"old_detail.oldCharacteristic":oldCharacteristic,"old_detail.oldhistory":oldhistory,"old_detail.oldclothes":oldclothes,"old_detail.oldaddr":oldaddr}},  function(err) {
       if(err){
 		    res.send("There was a problem adding the information to the database.");
 		    console.log(err);		
@@ -270,7 +270,7 @@ app.post('/updateBeaconId',urlencodedParser,function(req,res){
 			res.status(200).send("exist");
 			res.end();
 			}else{
-				collection.update(whereName, {$set: {"old_detail":{"beaconId":beaconId,"oldName":oldName,"oldCharacteristic":oldCharacteristic,"oldhistory":oldhistory,"oldclothes":oldclothes,"oldaddr":oldaddr}}},  function(err) {
+				collection.update(whereName, {$set: {"old_detail.beaconId":beaconId}},  function(err) {
 					if(err){
 					res.send("There was a problem adding the information to the database.");
 					console.log(err);		
