@@ -139,7 +139,7 @@ app.post('/groupService',urlencodedParser,function(req,res){
 							res.status(200).send("exist");
 							res.end();	
 						}else{
-							collection.update({"old_detail.groupMember":{$ne:groupMemberv}}, {$push: {"old_detail.groupMember":groupMemberv}},  function(err) {
+							collection.update({"user":user,"old_detail.groupMember":{$ne:groupMemberv}}, {$push: {"old_detail.groupMember":groupMemberv}},  function(err) {
 				  				if(err){
 									res.send("There was a problem adding the information to the database.");
 									console.log(err);		
