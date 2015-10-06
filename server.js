@@ -105,40 +105,61 @@ app.post('/groupService',urlencodedParser,function(req,res){
 	var collection = myDB.collection('login');
 	//1 for add groupMember.
 	if(req.body.status == "1"){
-		
 		var groupMemberv = req.body.groupMember;
-		// $in means there are fit words in field
-		collection.find({"user":user, "old_detail.groupMember":{ $in:[groupMemberv]}}).toArray(function(err, docs) {
-		    if(err){
-		    	res.send("There was a problem adding the information to the database.");
-				console.log(err);
-		    	
-		    }else{
-		        if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
-					res.type("text/plain");
-					res.status(200).send("exist");
-					// var jsonData = JSON.stringify(docs);
-					// var jsonObj = JSON.parse(jsonData);
-					// for(var i =0;i<jsonObj[0].old_detail.groupMember.length;i++){
-					// 	console.log(jsonObj[0].old_detail.groupMember[i]);
-					// }
-					
-					res.end();	
-				}else{
-					collection.update({"old_detail.groupMember":{$ne:groupMemberv}}, {$push: {"old_detail.groupMember":groupMemberv}},  function(err) {
-		  				if(err){
-							res.send("There was a problem adding the information to the database.");
-							console.log(err);		
-						}else{
+		collection.find().toArray(function(err,docs){
+		if(err){
+			res.status(406).send(err);
+			res.end();
+		}else{
+			var jsonData = JSON.stringify(docs);
+			var jsonObj = JSON.parse(jsonData);
+			var e ="";
+			console.log("in find");
+			for(var i =0 ; i < jsonObj.length ;i++){
+				
+				if ( jsonObj[i].user == groupMemberv ){
+					e = "exist";
+					console.log("e="+e);
+					break;
+				} 	
+				console.log("in for"+i);
+			}
+			
+			if ( e == "exist") { 
+				console.log("in exist");
+				// $in means there are fit words in field
+				collection.find({"user":user, "old_detail.groupMember":{ $in:[groupMemberv]}}).toArray(function(err, docs) {
+				    if(err){
+				    	res.send("There was a problem adding the information to the database.");
+						console.log(err);
+				    	
+				    }else{
+				        if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
 							res.type("text/plain");
-							res.status(200).send("ok");
+							res.status(200).send("exist");
 							res.end();	
+						}else{
+							collection.update({"old_detail.groupMember":{$ne:groupMemberv}}, {$push: {"old_detail.groupMember":groupMemberv}},  function(err) {
+				  				if(err){
+									res.send("There was a problem adding the information to the database.");
+									console.log(err);		
+								}else{
+									res.type("text/plain");
+									res.status(200).send("ok");
+									res.end();	
+								}
+							});
 						}
-					});
-				}
-		    }
+				    }
+				});
+			}else{
+				res.type("text/plain");
+				res.status(200).send("no user");
+				res.end();
+			}
+		}
 		});
-		
+	
 	}
 	//2 for getAllGroupMember.
 	if(req.body.status == "2"){
