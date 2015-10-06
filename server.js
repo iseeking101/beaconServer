@@ -60,12 +60,12 @@ http.get("/logout", function(req, res){
 */
 
 app.get('/', function(req, res) {
-	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/updateBeaconId" method="post">' +
+	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/groupService" method="post">' +
                'Enter your name:' +
                '<input type="text" name="user" placeholder="..." />' +
 			   //'<input type="text" name="password" placeholder="..." />' +
-			   //'<input type="text" name="email" placeholder="..." />' +
-			   '<input type="text" name="beaconId" placeholder="..." />' +
+			   '<input type="text" name="status" placeholder="..." />' +
+			   '<input type="text" name="groupMember" placeholder="..." />' +
 			   
                '<br>' +
                '<button type="submit">Submit</button>' +
@@ -100,6 +100,72 @@ app.post('/getOld',urlencodedParser,function(req,res){
 		}
 	});
 });
+app.post('/groupService',urlencodedParser,function(req,res){
+	var user = req.body.user;
+	var collection = myDB.collection('login');
+	//1 for add groupMember.
+	if(req.body.status == "1"){
+		
+		var groupMemberv = req.body.groupMember;
+		// $in means there are fit words in field
+		collection.find({"user":user, "old_detail.groupMember":{ $in:[groupMemberv]}}).toArray(function(err, docs) {
+		    if(err){
+		    	res.send("There was a problem adding the information to the database.");
+				console.log(err);
+		    	
+		    }else{
+		        if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
+					res.type("text/plain");
+					res.status(200).send(groupMemberv+"has exist");
+					var jsonData = JSON.stringify(docs);
+					var jsonObj = JSON.parse(jsonData);
+					for(var i =0;i<jsonObj[0].old_detail.groupMember.length;i++){
+						console.log(jsonObj[0].old_detail.groupMember[i]);
+					}
+					
+					res.end();	
+				}else{
+					collection.update({"old_detail.groupMember":{$ne:groupMemberv}}, {$push: {"old_detail.groupMember":groupMemberv}},  function(err) {
+		  				if(err){
+							res.send("There was a problem adding the information to the database.");
+							console.log(err);		
+						}else{
+							res.type("text/plain");
+							res.status(200).send("ok");
+							res.end();	
+						}
+					});
+				}
+		    }
+		});
+		
+	}
+	//2 for getAllGroupMember.
+	if(req.body.status == "2"){
+		var whereName = {"user" : user, "old_detail.groupMember":{$exists:true}};
+		collection.find(whereName).toArray(function(err,docs){
+			if(err){
+				res.status(406).send(err);
+				res.end();
+			}else{
+				if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
+					res.type('application/json');
+					var jsonData = JSON.stringify(docs);
+					var jsonObj = JSON.parse(jsonData);
+					console.log(jsonObj[0].detail.userName);
+					res.status(200).send(docs);
+					res.end();
+				}else{
+					res.type('text/plain');
+					res.status(200).send("no detail");
+					res.end();
+				}
+			}
+		});
+	}
+	
+});
+
 app.post('/getMember',urlencodedParser,function(req,res){
 	 
 	
@@ -334,7 +400,8 @@ app.post('/register',urlencodedParser,function(req,res){
 			"oldCharacteristic":"",
 			"oldhistory":"",
 			"oldclothes":"",
-			"oldaddr":""
+			"oldaddr":"",
+			"groupMember":[]
 			
 		}
     }, function (err, doc) {
