@@ -194,16 +194,16 @@ app.post('/groupService',urlencodedParser,function(req,res){
 				}else{
 					if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
 							res.type("application/json");
-							var jsonData = JSON.stringify(docs);
-							var jsonObj = JSON.parse(jsonData);
-							for(var i = 0 ; i < docs.length ; i++){
+							// var jsonData = JSON.stringify(docs);
+							// var jsonObj = JSON.parse(jsonData);
+							// for(var i = 0 ; i < docs.length ; i++){
 								
-								oldNames += jsonObj[i].old_detail.oldName;
-								if(i<(docs.length)-1){
-									oldNames += ",";
-								}
-							}
-							res.status(200).send(oldNames.split(","));
+							// 	oldNames += jsonObj[i].old_detail.oldName;
+							// 	if(i<(docs.length)-1){
+							// 		oldNames += ",";
+							// 	}
+							// }
+							res.status(200).send(docs);
 							res.end();
 					}else{
 						res.type("text/plain");
