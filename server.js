@@ -60,12 +60,12 @@ http.get("/logout", function(req, res){
 */
 
 app.get('/', function(req, res) {
-	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/updateBeaconId" method="post">' +
+	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/groupService" method="post">' +
                'Enter your name:' +
                '<input type="text" name="user" placeholder="..." />' +
 			   //'<input type="text" name="password" placeholder="..." />' +
 			   '<input type="text" name="status" placeholder="..." />' +
-			   '<input type="text" name="beaconId" placeholder="..." />' +
+			   '<input type="text" name="groupMember" placeholder="..." />' +
 			   
                '<br>' +
                '<button type="submit">Submit</button>' +
@@ -104,8 +104,9 @@ app.post('/groupService',urlencodedParser,function(req,res){
 	var user = req.body.user;
 	var collection = myDB.collection('login');
 	//1 for add groupMember.
+	var groupMemberv = req.body.groupMember;
 	if(req.body.status == "1"){
-		var groupMemberv = req.body.groupMember;
+		
 		collection.find().toArray(function(err,docs){
 		if(err){
 			res.status(406).send(err);
@@ -183,6 +184,34 @@ app.post('/groupService',urlencodedParser,function(req,res){
 				}
 			}
 		});
+	}
+	if(req.body.status =="3"){
+		var oldNames ="";
+			collection.find({"old_detail.groupMember": {$in:[user]}}).toArray(function(err, docs) {
+				if(err){
+					res.status(406).send(err);
+					res.end();
+				}else{
+					if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
+							res.type("application/json");
+							var jsonData = JSON.stringify(docs);
+							var jsonObj = JSON.parse(jsonData);
+							for(var i = 0 ; i < docs.length ; i++){
+								
+								oldNames += jsonObj[i].old_detail.oldName;
+								if(i<(docs.length)-1){
+									oldNames += ",";
+								}
+							}
+							res.status(200).send(oldNames.split(","));
+							res.end();
+					}else{
+						res.type("text/plain");
+						res.status(200).send("nothing");
+						res.end();
+					}
+				}
+			});
 	}
 	
 });
@@ -408,6 +437,7 @@ app.post('/register',urlencodedParser,function(req,res){
 		"comfirm" : 0,
 		"mf" : mf,
 		"pic":"",
+		"myGroup":[],
 		"detail" : {
 			"userName":"",
 			"userPhone":"",
