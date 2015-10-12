@@ -213,6 +213,36 @@ app.post('/groupService',urlencodedParser,function(req,res){
 				}
 			});
 	}
+	if(req.body.status == "4" ){
+		//查beaconid 有沒有登入,沒有就不能進入群組
+		collection.find({"user":req.body.user}).toArray(function(err, docs) {
+				if(err){
+					res.status(406).send(err);
+					res.end();
+				}else{
+					if ( typeof docs[0].old_detail.beaconId !== 'undefined' && docs[0].old_detail.beaconId !== null && docs[0].old_detail.beaconId !== ""  ) { 
+							res.type("text/plain");
+							 //var jsonData = JSON.stringify(docs);
+							 //var jsonObj = JSON.parse(jsonData);
+							// for(var i = 0 ; i < docs.length ; i++){
+								
+							// 	oldNames += jsonObj[i].old_detail.oldName;
+							// 	if(i<(docs.length)-1){
+							// 		oldNames += ",";
+							// 	}
+							// }
+							//console.log("beaconId= "+docs[0].old_detail.beaconId+" ,  "+  (typeof docs[0].old_detail.beaconId)+" ,user = "+docs[0].user );
+							res.status(200).send("ok");
+							res.end();
+					}else{
+						res.type("text/plain");
+						res.status(200).send("nothing");
+						res.end();
+					}
+				}
+			});
+		
+	}
 	
 });
 
@@ -364,7 +394,7 @@ app.post('/login',urlencodedParser,function(req,res){
 			var jsonObj = JSON.parse(jsonData);
 			var rt = "0";
 			//如果不是undefined或不是null表示有查到資料，則回傳
-			if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
+			if (typeof docs[0] !== 'undefined' && docs[0] !== null) { 
 				if(jsonObj[0].comfirm == 0){
 					rt = "2"; console.log("帳號無開通");
 					res.type('text/plain');
