@@ -34,7 +34,7 @@ var jsonParser = bodyParser.json();
 var urlencodedParser = bodyParser.urlencoded({ extended: true });
 
 
-var dddd;
+
 var mongodbURL = 'mongodb://iseeking101:iseeking2015@ds027318.mongolab.com:27318/iseeking';
 var myDB;
 
@@ -60,7 +60,7 @@ http.get("/logout", function(req, res){
 
 app.get('/', function(req, res) {
 	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/updateMember" method="post">' +
-               'Enter your name:' +
+               'Enter your nam1s:' +
                '<input type="text" name="user" placeholder="..." />' +
 			   '<input type="text" name="password" placeholder="..." />' +
 			   '<input type="text" name="email" placeholder="..." />' +
