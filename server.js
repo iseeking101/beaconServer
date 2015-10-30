@@ -1,3 +1,4 @@
+
 var express = require('express');
 var mongodb = require('mongodb');
 var bodyParser = require('body-parser');
@@ -59,14 +60,13 @@ http.get("/logout", function(req, res){
 */
 
 app.get('/', function(req, res) {
-	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/updateMember" method="post">' +
-               'Enter your nam1s:' +
+	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/groupService" method="post">' +
+               'Enter your name1:' +
                '<input type="text" name="user" placeholder="..." />' +
-			   '<input type="text" name="password" placeholder="..." />' +
-			   '<input type="text" name="email" placeholder="..." />' +
-			   '<input type="text" name="userName" placeholder="name" />' +
-			   '<input type="text" name="userPhone" placeholder="phone" />' +
-			   '<input type="text" name="userAddress" placeholder="address" />' +
+			   //'<input type="text" name="password" placeholder="..." />' +
+			   '<input type="text" name="status" placeholder="..." />' +
+			   '<input type="text" name="groupMember" placeholder="..." />' +
+			   
                '<br>' +
                '<button type="submit">Submit</button>' +
             '</form>';
@@ -100,6 +100,152 @@ app.post('/getOld',urlencodedParser,function(req,res){
 		}
 	});
 });
+app.post('/groupService',urlencodedParser,function(req,res){
+	var user = req.body.user;
+	var collection = myDB.collection('login');
+	//1 for add groupMember.
+	var groupMemberv = req.body.groupMember;
+	if(req.body.status == "1"){
+		
+		collection.find().toArray(function(err,docs){
+		if(err){
+			res.status(406).send(err);
+			res.end();
+		}else{
+			var jsonData = JSON.stringify(docs);
+			var jsonObj = JSON.parse(jsonData);
+			var e ="";
+			console.log("in find");
+			for(var i =0 ; i < jsonObj.length ;i++){
+				
+				if ( jsonObj[i].user == groupMemberv ){
+					e = "exist";
+					console.log("e="+e);
+					break;
+				} 	
+				console.log("in for"+i);
+			}
+			
+			if ( e == "exist") { 
+				console.log("in exist");
+				// $in means there are fit words in field
+				collection.find({"user":user, "old_detail.groupMember":{ $in:[groupMemberv]}}).toArray(function(err, docs) {
+				    if(err){
+				    	res.send("There was a problem adding the information to the database.");
+						console.log(err);
+				    	
+				    }else{
+				        if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
+							res.type("text/plain");
+							res.status(200).send("exist");
+							res.end();	
+						}else{
+							collection.update({"user":user,"old_detail.groupMember":{$ne:groupMemberv}}, {$push: {"old_detail.groupMember":groupMemberv}},  function(err) {
+				  				if(err){
+									res.send("There was a problem adding the information to the database.");
+									console.log(err);		
+								}else{
+									res.type("text/plain");
+									res.status(200).send("ok");
+									res.end();	
+								}
+							});
+						}
+				    }
+				});
+			}else{
+				res.type("text/plain");
+				res.status(200).send("no user");
+				res.end();
+			}
+		}
+		});
+	
+	}
+	//2 for getAllGroupMember.
+	if(req.body.status == "2"){
+		var whereName = {"user" : user, "old_detail.groupMember":{$exists:true}};
+		collection.find(whereName).toArray(function(err,docs){
+			if(err){
+				res.status(406).send(err);
+				res.end();
+			}else{
+				if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
+					res.type('application/json');
+					var jsonData = JSON.stringify(docs);
+					var jsonObj = JSON.parse(jsonData);
+					console.log(jsonObj[0].detail.userName);
+					res.status(200).send(docs);
+					res.end();
+				}else{
+					res.type('text/plain');
+					res.status(200).send("no detail");
+					res.end();
+				}
+			}
+		});
+	}
+	if(req.body.status =="3"){
+		var oldNames ="";
+			collection.find({"old_detail.groupMember": {$in:[user]}}).toArray(function(err, docs) {
+				if(err){
+					res.status(406).send(err);
+					res.end();
+				}else{
+					if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
+							res.type("application/json");
+							// var jsonData = JSON.stringify(docs);
+							// var jsonObj = JSON.parse(jsonData);
+							// for(var i = 0 ; i < docs.length ; i++){
+								
+							// 	oldNames += jsonObj[i].old_detail.oldName;
+							// 	if(i<(docs.length)-1){
+							// 		oldNames += ",";
+							// 	}
+							// }
+							res.status(200).send(docs);
+							res.end();
+					}else{
+						res.type("text/plain");
+						res.status(200).send("nothing");
+						res.end();
+					}
+				}
+			});
+	}
+	if(req.body.status == "4" ){
+		//查beaconid 有沒有登入,沒有就不能進入群組
+		collection.find({"user":req.body.user}).toArray(function(err, docs) {
+				if(err){
+					res.status(406).send(err);
+					res.end();
+				}else{
+					if ( typeof docs[0].old_detail.beaconId !== 'undefined' && docs[0].old_detail.beaconId !== null && docs[0].old_detail.beaconId !== ""  ) { 
+							res.type("text/plain");
+							 //var jsonData = JSON.stringify(docs);
+							 //var jsonObj = JSON.parse(jsonData);
+							// for(var i = 0 ; i < docs.length ; i++){
+								
+							// 	oldNames += jsonObj[i].old_detail.oldName;
+							// 	if(i<(docs.length)-1){
+							// 		oldNames += ",";
+							// 	}
+							// }
+							//console.log("beaconId= "+docs[0].old_detail.beaconId+" ,  "+  (typeof docs[0].old_detail.beaconId)+" ,user = "+docs[0].user );
+							res.status(200).send("ok");
+							res.end();
+					}else{
+						res.type("text/plain");
+						res.status(200).send("nothing");
+						res.end();
+					}
+				}
+			});
+		
+	}
+	
+});
+
 app.post('/getMember',urlencodedParser,function(req,res){
 	 
 	
@@ -132,10 +278,11 @@ app.post('/updateOld',urlencodedParser,function(req,res){
 	var oldhistory = req.body.oldhistory;
 	var oldclothes = req.body.oldclothes;
 	var oldaddr = req.body.oldaddr;
+	var beaconId = req.body.beaconId;
  	var collection = myDB.collection('login');
 	var whereName = {"user": user};
-
-	collection.update(whereName, {$set: {"old_detail":{"oldName":oldName,"oldCharacteristic":oldCharacteristic,"oldhistory":oldhistory,"oldclothes":oldclothes,"oldaddr":oldaddr}}},  function(err) {
+//
+	collection.update(whereName, {$set: {"old_detail.oldName":oldName,"old_detail.oldCharacteristic":oldCharacteristic,"old_detail.oldhistory":oldhistory,"old_detail.oldclothes":oldclothes,"old_detail.oldaddr":oldaddr}},  function(err) {
       if(err){
 		    res.send("There was a problem adding the information to the database.");
 		    console.log(err);		
@@ -146,60 +293,69 @@ app.post('/updateOld',urlencodedParser,function(req,res){
 		}
     });
 });
+app.post('/updateBeaconId',urlencodedParser,function(req,res){
+	var user = req.body.user;
+	var oldName = req.body.oldName;
+	var oldCharacteristic = req.body.oldCharacteristic;
+	var oldhistory = req.body.oldhistory;
+	var oldclothes = req.body.oldclothes;
+	var oldaddr = req.body.oldaddr;
+	var beaconId = req.body.beaconId;
+ 	var collection = myDB.collection('login');
+	var whereName = {"user": user};
+// collection.find({"user":user_name}).toArray(function(err,docs){});
+	collection.find().toArray(function(err,docs){
+		if(err){
+			res.status(406).send(err);
+			res.end();
+		}else{
+			var jsonData = JSON.stringify(docs);
+			var jsonObj = JSON.parse(jsonData);
+			var e ="";
+			console.log("in find");
+			for(var i =0 ; i < jsonObj.length ;i++){
+				
+				if ( jsonObj[i].old_detail.beaconId == beaconId ){
+					e = "exist";
+					console.log("e="+e);
+					break;
+				} 	
+				console.log("in for"+i);
+			}
+			
+			if ( e == "exist") { 
+			console.log("in exist");
+			res.type("text/plain");
+			res.status(200).send("exist");
+			res.end();
+			}else{
+				collection.update(whereName, {$set: {"old_detail.beaconId":beaconId}},  function(err) {
+					if(err){
+					res.send("There was a problem adding the information to the database.");
+					console.log(err);		
+					}else{
+					res.type("text/plain");
+					res.status(200).send("ok");
+					res.end();	
+					}	
+				});
+			}
+		}
+		
+	});
+});
 app.post('/updateMember',urlencodedParser,function(req,res){
 	var user = req.body.user;
 	var userName = req.body.userName;
 	var userPhone = req.body.userPhone;
 	var userAddress = req.body.userAddress;
 	var reward = req.body.reward;
+	var location = req.body.location;	
  	var collection = myDB.collection('login');
 	var whereName = {"user": user};
 
-	/*
-	collection.find(whereName).toArray(function(err, docs) {
-		if(err){
-			res.status(406).send(err);
-			res.end();
-		}else{
-			if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
-				var jsonData = JSON.stringify(docs);
-				var jsonObj = JSON.parse(jsonData);
-				var updateArray = [];
-				var updateSet = "";
-				if(jsonObj[0].detail.userName !== userName){
-					updateArray[0]={"userName":userName};
-				}
-				if(jsonObj[0].detail.userPhone !== userPhone){
-					updateArray[1]={"userPhone:":userPhone};
-				}
-				if(jsonObj[0].detail.userAddress !== userAddress){
-					updateArray[2]={"userAddress:":userAddress};
-				}
-				if(jsonObj[0].detail.reward !== reward){
-					updateArray[3]={"reward:":reward};
-				}
-				if(updateArray.length > 0){
-					var aaaa =JSON.parse(JSON.stringify(updateArray));
-					
-					collection.update(whereName, {$set: {"detail":aaaa}},  function(err) {
-						if(err){
-							res.send("There was a problem adding the information to the database.");
-							console.log("update worng"+err);		
-						}else{
-							res.type("text/plain");
-							res.status(200).send("ok");
-							res.end();	
-						}
-					});
-				}else{
-					res.type("text/plain");
-					res.status(200).send("ok");
-					res.end();
-				}
-			}
-		}
-	});*/
-	collection.update(whereName, {$set: {"detail":{"userName":userName,"userPhone":userPhone,"userAddress":userAddress,"reward":reward}}},  function(err) {
+	
+	collection.update(whereName, {$set: {"detail.userName":userName,"detail.userPhone":userPhone,"detail.userAddress":userAddress,"detail.reward":reward,"detail.location":location}},  function(err) {
       if(err){
 		    res.send("There was a problem adding the information to the database.");
 		    console.log(err);		
@@ -238,7 +394,7 @@ app.post('/login',urlencodedParser,function(req,res){
 			var jsonObj = JSON.parse(jsonData);
 			var rt = "0";
 			//如果不是undefined或不是null表示有查到資料，則回傳
-			if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
+			if (typeof docs[0] !== 'undefined' && docs[0] !== null) { 
 				if(jsonObj[0].comfirm == 0){
 					rt = "2"; console.log("帳號無開通");
 					res.type('text/plain');
@@ -284,7 +440,7 @@ app.post('/register',urlencodedParser,function(req,res){
     var user_name = req.body.user;
 	var user_password = req.body.password;
 	var user_email = req.body.email;
-	var mf = md5(Math.random())
+	var mf = md5(Math.random());
 	var collection = myDB.collection('login');
 	var content = "帳號:"+ user_name + "  您好，請點網址開通帳號: http://beacon-series.herokuapp.com/comfirm?mf=" + mf + "&user="+user_name
 	var mailOptions={
@@ -292,14 +448,18 @@ app.post('/register',urlencodedParser,function(req,res){
 		subject : "認證信",
 		text : content
 	}
-	smtpTransport.sendMail(mailOptions, function(error, response){
-		if(error){
-			console.log(error);		
+	console.log(user_name);
+	collection.find({"user":user_name}).toArray(function(err,docs){
+		if(err){
+			res.status(406).send(err);
+			res.end();
 		}else{
-			console.log("Message sent: " + response.message);		
-		}
-	});
-	collection.insert({
+			if (typeof docs[0] !== 'undefined' && docs[0] !== null ) {
+				res.type("text/plain");
+				res.status(200).send("exist");
+				res.end();
+			}else{
+				collection.insert({
 		"id":"",
         "user" : user_name,
         "password" : md5(user_password),
@@ -307,14 +467,22 @@ app.post('/register',urlencodedParser,function(req,res){
 		"comfirm" : 0,
 		"mf" : mf,
 		"pic":"",
+		"myGroup":[],
 		"detail" : {
 			"userName":"",
 			"userPhone":"",
 			"userAddress":"",
-			"reward":""
+			"reward":"",
+			"location":""
 		},
 		"old_detail":{
-			
+			"beaconId":"",
+			"oldName":"",
+			"oldCharacteristic":"",
+			"oldhistory":"",
+			"oldclothes":"",
+			"oldaddr":"",
+			"groupMember":[]
 			
 		}
     }, function (err, doc) {
@@ -327,11 +495,25 @@ app.post('/register',urlencodedParser,function(req,res){
             // If it worked, set the header so the address bar doesn't still say /adduser
             res.type("text/plain");
 			res.status(200).send("OK");
+			smtpTransport.sendMail(mailOptions, function(error, response){
+			if(error){
+				console.log(error);		
+			}else{
+			console.log("Message sent: " + response.message);		
+			}
+			});
 			res.end();
             // And forward to success page
             
         }
-    });	
+    });
+				
+			}
+				
+		}	
+
+	});
+	
 });
 
 
@@ -352,9 +534,7 @@ app.get('/api/test', function(request, response) {
 		}
 	})
 });
-
 */
 var port = process.env.PORT || 3000; // process.env.PORT for Heroku
 http.createServer(app).listen(port);
-
 
