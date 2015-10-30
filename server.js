@@ -61,7 +61,7 @@ http.get("/logout", function(req, res){
 
 app.get('/', function(req, res) {
 	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/groupService" method="post">' +
-               'Enter your name1:' +
+               'Enter your name11:' +
                '<input type="text" name="user" placeholder="..." />' +
 			   //'<input type="text" name="password" placeholder="..." />' +
 			   '<input type="text" name="status" placeholder="..." />' +
