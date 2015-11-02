@@ -24,7 +24,7 @@ var smtpTransport = nodemailer.createTransport("SMTP",{
     service: "Gmail",
     auth: {
         user: "iseeking101@gmail.com",
-        pass: "iseeking2015"
+        pass: "iseeking20155"
     }
 });
 /*------------------SMTP Over-----------------------------*/
@@ -60,12 +60,20 @@ http.get("/logout", function(req, res){
 */
 
 app.get('/', function(req, res) {
-	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/groupService" method="post">' +
-               'Enter your name1:' +
-               '<input type="text" name="user" placeholder="..." />' +
-			   //'<input type="text" name="password" placeholder="..." />' +
-			   '<input type="text" name="status" placeholder="..." />' +
-			   '<input type="text" name="groupMember" placeholder="..." />' +
+	
+ 
+	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/updateMember" method="post">' +
+               'Enter your name:' +
+               '<input type="text" name="user" placeholder="user" />' +
+			   '<input type="text" name="userName" placeholder="userName" />' +
+			   '<input type="text" name="userPhone" placeholder="userPhone" />' +
+			   '<input type="text" name="userAddress" placeholder="userAddress" />' +
+			   '<input type="text" name="reward" placeholder="reward" />' +
+			   '<input type="text" name="location" placeholder="location" />' +
+			   '<input type="text" name="longitude" placeholder="longitude" />' +
+			   '<input type="text" name="latitude" placeholder="latitude" />' +
+			   
+			   //'<input type="text" name="groupMember" placeholder="..." />' +
 			   
                '<br>' +
                '<button type="submit">Submit</button>' +
@@ -100,6 +108,7 @@ app.post('/getOld',urlencodedParser,function(req,res){
 		}
 	});
 });
+
 app.post('/groupService',urlencodedParser,function(req,res){
 	var user = req.body.user;
 	var collection = myDB.collection('login');
@@ -213,36 +222,37 @@ app.post('/groupService',urlencodedParser,function(req,res){
 				}
 			});
 	}
-	if(req.body.status == "4" ){
-		//查beaconid 有沒有登入,沒有就不能進入群組
-		collection.find({"user":req.body.user}).toArray(function(err, docs) {
-				if(err){
-					res.status(406).send(err);
-					res.end();
-				}else{
-					if ( typeof docs[0].old_detail.beaconId !== 'undefined' && docs[0].old_detail.beaconId !== null && docs[0].old_detail.beaconId !== ""  ) { 
-							res.type("text/plain");
-							 //var jsonData = JSON.stringify(docs);
-							 //var jsonObj = JSON.parse(jsonData);
-							// for(var i = 0 ; i < docs.length ; i++){
+	//判斷某物件裡有沒有資料
+	// if(req.body.status == "4" ){
+	// 	//查beaconid 有沒有登入,沒有就不能進入群組
+	// 	collection.find({"user":req.body.user}).toArray(function(err, docs) {
+	// 			if(err){
+	// 				res.status(406).send(err);
+	// 				res.end();
+	// 			}else{
+	// 				if ( typeof docs[0].old_detail.beaconId !== 'undefined' && docs[0].old_detail.beaconId !== null && docs[0].old_detail.beaconId !== ""  ) { 
+	// 						res.type("text/plain");
+	// 						 //var jsonData = JSON.stringify(docs);
+	// 						 //var jsonObj = JSON.parse(jsonData);
+	// 						// for(var i = 0 ; i < docs.length ; i++){
 								
-							// 	oldNames += jsonObj[i].old_detail.oldName;
-							// 	if(i<(docs.length)-1){
-							// 		oldNames += ",";
-							// 	}
-							// }
-							//console.log("beaconId= "+docs[0].old_detail.beaconId+" ,  "+  (typeof docs[0].old_detail.beaconId)+" ,user = "+docs[0].user );
-							res.status(200).send("ok");
-							res.end();
-					}else{
-						res.type("text/plain");
-						res.status(200).send("nothing");
-						res.end();
-					}
-				}
-			});
+	// 						// 	oldNames += jsonObj[i].old_detail.oldName;
+	// 						// 	if(i<(docs.length)-1){
+	// 						// 		oldNames += ",";
+	// 						// 	}
+	// 						// }
+	// 						//console.log("beaconId= "+docs[0].old_detail.beaconId+" ,  "+  (typeof docs[0].old_detail.beaconId)+" ,user = "+docs[0].user );
+	// 						res.status(200).send("ok");
+	// 						res.end();
+	// 				}else{
+	// 					res.type("text/plain");
+	// 					res.status(200).send("nothing");
+	// 					res.end();
+	// 				}
+	// 			}
+	// 		});
 		
-	}
+	// }
 	
 });
 
@@ -295,15 +305,9 @@ app.post('/updateOld',urlencodedParser,function(req,res){
 });
 app.post('/updateBeaconId',urlencodedParser,function(req,res){
 	var user = req.body.user;
-	var oldName = req.body.oldName;
-	var oldCharacteristic = req.body.oldCharacteristic;
-	var oldhistory = req.body.oldhistory;
-	var oldclothes = req.body.oldclothes;
-	var oldaddr = req.body.oldaddr;
 	var beaconId = req.body.beaconId;
  	var collection = myDB.collection('login');
 	var whereName = {"user": user};
-// collection.find({"user":user_name}).toArray(function(err,docs){});
 	collection.find().toArray(function(err,docs){
 		if(err){
 			res.status(406).send(err);
@@ -350,12 +354,26 @@ app.post('/updateMember',urlencodedParser,function(req,res){
 	var userPhone = req.body.userPhone;
 	var userAddress = req.body.userAddress;
 	var reward = req.body.reward;
-	var location = req.body.location;	
+	var location = req.body.location;
+	var longitude = parseFloat(req.body.longitude);
+    var latitude = parseFloat(req.body.latitude);
  	var collection = myDB.collection('login');
 	var whereName = {"user": user};
-
 	
-	collection.update(whereName, {$set: {"detail.userName":userName,"detail.userPhone":userPhone,"detail.userAddress":userAddress,"detail.reward":reward,"detail.location":location}},  function(err) {
+    if (!isNaN(longitude)) {
+    	//is number part
+           longitude = parseFloat(req.body.longitude);
+    }else {
+	       longitude = null;
+    }
+    if (!isNaN(latitude)) {
+    	//is number part
+           latitude = parseFloat(req.body.latitude);
+    }else {
+	       latitude = null;
+    }
+	
+	collection.update(whereName, {$set: {"detail.userName":userName,"detail.userPhone":userPhone,"detail.userAddress":userAddress,"detail.reward":reward,"detail.location":location,"detail.longitude":longitude,"detail.latitude":latitude}},  function(err) {
       if(err){
 		    res.send("There was a problem adding the information to the database.");
 		    console.log(err);		
@@ -369,6 +387,7 @@ app.post('/updateMember',urlencodedParser,function(req,res){
 
 
 app.post('/login',urlencodedParser,function(req,res){
+	
   //確認session有無user在沒有就執行登入，有就直接回傳
   if(req.session.user){
 	  res.type('text/plain');
@@ -377,11 +396,11 @@ app.post('/login',urlencodedParser,function(req,res){
   else{
   //sess.cookie.maxAge = 5000;
   //user存入session
-  req.session.user = req.body.user;
+ // req.session.user = req.body.user;
   //抓取post 參數
   var user_name = req.body.user;
   var user_password = md5(req.body.password);
-  if (!req.body) return res.sendStatus(400)
+  if (!req.body) return res.sendStatus(400);
   //設定query條件
   var whereMf ={"user": user_name,"password": user_password};
   var collection = myDB.collection('login');
@@ -435,6 +454,23 @@ app.get('/comfirm',function(req,res){
 		}
     });
 });
+app.post('/testMail',urlencodedParser,function(req,res){
+	var content = "帳號:"+ req.body.user + "  您好，請點網址開通帳號: http://beacon-series.herokuapp.com/comfirm?"
+	var mailOptions={
+		to : req.body.email,
+		subject : "認證信",
+		text : content
+	}	
+	smtpTransport.sendMail(mailOptions, function(error, response){
+			if(error){
+				console.log(error);	
+				res.send(error);
+			}else{
+			res.send("OK");	
+			console.log("Message sent: " + response.message);		
+			}
+			});
+});
 app.post('/register',urlencodedParser,function(req,res){
 	console.log("in register app");
     var user_name = req.body.user;
@@ -454,6 +490,7 @@ app.post('/register',urlencodedParser,function(req,res){
 			res.status(406).send(err);
 			res.end();
 		}else{
+			//有查到資料 ,代表帳號已被使用
 			if (typeof docs[0] !== 'undefined' && docs[0] !== null ) {
 				res.type("text/plain");
 				res.status(200).send("exist");
@@ -473,7 +510,9 @@ app.post('/register',urlencodedParser,function(req,res){
 			"userPhone":"",
 			"userAddress":"",
 			"reward":"",
-			"location":""
+			"location":"",
+			"longitude" :null ,
+			"latitude" : null,
 		},
 		"old_detail":{
 			"beaconId":"",
