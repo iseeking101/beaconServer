@@ -62,16 +62,20 @@ http.get("/logout", function(req, res){
 app.get('/', function(req, res) {
 	
  
-	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/updateMember" method="post">' +
+	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/getMissingOld" method="post">' +
                'Enter your name:' +
-               '<input type="text" name="user" placeholder="user" />' +
-			   '<input type="text" name="userName" placeholder="userName" />' +
-			   '<input type="text" name="userPhone" placeholder="userPhone" />' +
-			   '<input type="text" name="userAddress" placeholder="userAddress" />' +
-			   '<input type="text" name="reward" placeholder="reward" />' +
-			   '<input type="text" name="location" placeholder="location" />' +
-			   '<input type="text" name="longitude" placeholder="longitude" />' +
+                '<input type="text" name="longitude" placeholder="longitude" />' +
 			   '<input type="text" name="latitude" placeholder="latitude" />' +
+			  
+               
+      //         '<input type="text" name="user" placeholder="user" />' +
+			   //'<input type="text" name="userName" placeholder="userName" />' +
+			   //'<input type="text" name="userPhone" placeholder="userPhone" />' +
+			   //'<input type="text" name="userAddress" placeholder="userAddress" />' +
+			   //'<input type="text" name="reward" placeholder="reward" />' +
+			   //'<input type="text" name="location" placeholder="location" />' +
+			   //'<input type="text" name="longitude" placeholder="longitude" />' +
+			   //'<input type="text" name="latitude" placeholder="latitude" />' +
 			   
 			   //'<input type="text" name="groupMember" placeholder="..." />' +
 			   
@@ -82,6 +86,26 @@ app.get('/', function(req, res) {
     
 	res.status(200).send(html);
 	res.end();
+});
+app.post('/getMissingOld',urlencodedParser,function(req,res){
+	var collection = myDB.collection('login');
+	var whereStatus = {"status":"1"};
+	collection.find(whereStatus).toArray(function(err,docs){
+		if(err){
+			res.status(406).send(err);
+			res.end();
+		}else{
+			if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
+				res.type('application/json');
+				res.status(200).send(docs);
+				res.end();
+			}else{
+				res.type('text/plain');
+				res.status(200).send("no detail");
+				res.end();
+			}
+		}	
+	});
 });
 app.post('/getOld',urlencodedParser,function(req,res){
 	 
@@ -196,6 +220,7 @@ app.post('/groupService',urlencodedParser,function(req,res){
 	}
 	if(req.body.status =="3"){
 		var oldNames ="";
+			//尋找login裡任groupMember裡面含有d帳號的使用者帳號 返回給app
 			collection.find({"old_detail.groupMember": {$in:[user]}}).toArray(function(err, docs) {
 				if(err){
 					res.status(406).send(err);
@@ -359,7 +384,7 @@ app.post('/updateMember',urlencodedParser,function(req,res){
     var latitude = parseFloat(req.body.latitude);
  	var collection = myDB.collection('login');
 	var whereName = {"user": user};
-	
+	//經緯度是"null"將其指定為null，接收的經緯度是字串 將其轉為float
     if (!isNaN(longitude)) {
     	//is number part
            longitude = parseFloat(req.body.longitude);
@@ -504,6 +529,7 @@ app.post('/register',urlencodedParser,function(req,res){
 		"comfirm" : 0,
 		"mf" : mf,
 		"pic":"",
+		"status":"1",
 		"myGroup":[],
 		"detail" : {
 			"userName":"",
