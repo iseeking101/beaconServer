@@ -62,17 +62,17 @@ http.get("/logout", function(req, res){
 app.get('/', function(req, res) {
 	
  
-	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/testa" method="post">' +
+	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/addOld" method="post">' +
                'Enter your name:' +
                '<input type="text" name="user" placeholder="user" />' +
-			   //'<input type="text" name="oldName" placeholder="oldName" />' +
-			   //'<input type="text" name="oldCharacteristic" placeholder="oldCharacteristic" />' +
-			   //'<input type="text" name="oldhistory" placeholder="oldhistory" />' +
-			   //'<input type="text" name="oldaddr" placeholder="oldaddr" />' +
-			   '<input type="text" name="beaconI" placeholder="beaconId" />' +
+			   '<input type="text" name="oldName" placeholder="oldName" />' +
+			   '<input type="text" name="oldCharacteristic" placeholder="oldCharacteristic" />' +
+			   '<input type="text" name="oldhistory" placeholder="oldhistory" />' +
+			   '<input type="text" name="oldaddr" placeholder="oldaddr" />' +
+			   '<input type="text" name="beaconId" placeholder="beaconId" />' +
 			   '<input type="text" name="groupMember" placeholder="groupMember" />' +
 			   '<input type="text" name="statuscv" placeholder="statusv" />' +
-			   //'<input type="text" name="oldclothes" placeholder="oldclothes" />' +
+			   '<input type="text" name="oldclothes" placeholder="oldclothes" />' +
       //         '<input type="text" name="user" placeholder="user" />' +
 			   //'<input type="text" name="userName" placeholder="userName" />' +
 			   //'<input type="text" name="userPhone" placeholder="userPhone" />' +
@@ -138,6 +138,7 @@ app.post('/getOld',urlencodedParser,function(req,res){
 		}
 	});
 });
+//有多個老人群組的加入方法
 app.post('/addOld',urlencodedParser,function(req, res) {
    	var user = req.body.user;
 	var oldName = req.body.oldName;
@@ -147,14 +148,25 @@ app.post('/addOld',urlencodedParser,function(req, res) {
 	var oldaddr = req.body.oldaddr;
 	var beaconId = req.body.beaconId;
  	var collection = myDB.collection('login');
-	var whereName = {"user": user};
-	collection.update(whereName, {$push: {"old_detail":{"beaconId":beaconId,
-			"oldName":oldName,
-			"oldCharacteristic":oldCharacteristic,
-			"oldhistory":oldhistory,
-			"oldclothes":oldclothes,
-			"oldaddr":oldaddr,
-			"groupMember":[]}}},  function(err) {
+ 	var statusv = req.body.statusv;
+ 	console.log("beaconId = " + beaconId);
+	collection.find({"old_detail.beaconId":beaconId}).toArray(function(err, docs) {
+	    if(err){
+	    	res.send(err);
+	    	res.end();
+	    }else{
+	    	if (typeof docs[0] !== 'undefined' && docs[0] !== null ) {
+	    		res.type("text/plain");
+				res.status(200).send("exist");
+				res.end();
+	    	}else{
+	    		collection.update({"user":user}, {$push: {"old_detail":{"beaconId":beaconId,
+				"oldName":oldName,
+				"oldCharacteristic":oldCharacteristic,
+				"oldhistory":oldhistory,
+				"oldclothes":oldclothes,
+				"oldaddr":oldaddr,
+				"groupMember":[],"statusv":"0"}}},  function(err) {
 				if(err){
 					console.log(err);	
 					res.send(err);
@@ -165,7 +177,9 @@ app.post('/addOld',urlencodedParser,function(req, res) {
 					res.end();
 				}
 			});
-
+	    	}
+	    }
+	});
 });
 app.post('/getOldAll',urlencodedParser,function(req, res){
 	var user = req.body.user;
@@ -338,7 +352,7 @@ app.post('/groupService',urlencodedParser,function(req,res){
 	res.send("no status !");
 	res.end();
 });
-//
+//已修正返回使用者帳號
 app.post('/getWhoFollowMe',urlencodedParser,function(req, res) {
    var collection = myDB.collection('login');
    
@@ -413,9 +427,8 @@ app.post('/updateOld',urlencodedParser,function(req,res){
 	var oldaddr = req.body.oldaddr;
 	var beaconId = req.body.beaconId;
  	var collection = myDB.collection('login');
-	var whereName = {"user": user};
-//
-	collection.update(whereName, {$set: {"old_detail.oldName":oldName,"old_detail.oldCharacteristic":oldCharacteristic,"old_detail.oldhistory":oldhistory,"old_detail.oldclothes":oldclothes,"old_detail.oldaddr":oldaddr}},  function(err) {
+
+	collection.update({"user":user,"old_detail.beaconId":beaconId}, {$set: {"old_detail.$.oldName":oldName,"old_detail.$.oldCharacteristic":oldCharacteristic,"old_detail.$.oldhistory":oldhistory,"old_detail.$.oldclothes":oldclothes,"old_detail.$.oldaddr":oldaddr}},  function(err) {
       if(err){
 		    res.send("There was a problem adding the information to the database.");
 		    console.log(err);		
@@ -426,50 +439,74 @@ app.post('/updateOld',urlencodedParser,function(req,res){
 		}
     });
 });
+//修改beaconId---暫不使用
 app.post('/updateBeaconId',urlencodedParser,function(req,res){
 	var user = req.body.user;
 	var beaconId = req.body.beaconId;
  	var collection = myDB.collection('login');
-	var whereName = {"user": user};
-	collection.find().toArray(function(err,docs){
-		if(err){
-			res.status(406).send(err);
-			res.end();
-		}else{
-			var jsonData = JSON.stringify(docs);
-			var jsonObj = JSON.parse(jsonData);
-			var e ="";
-			console.log("in find");
-			for(var i =0 ; i < jsonObj.length ;i++){
-				
-				if ( jsonObj[i].old_detail.beaconId == beaconId ){
-					e = "exist";
-					console.log("e="+e);
-					break;
-				} 	
-				console.log("in for"+i);
-			}
-			
-			if ( e == "exist") { 
-			console.log("in exist");
-			res.type("text/plain");
-			res.status(200).send("exist");
-			res.end();
-			}else{
-				collection.update(whereName, {$set: {"old_detail.beaconId":beaconId}},  function(err) {
+ 	//查詢是否有人使用過這個beaconId
+	collection.find({"old_detail.beaconId":beaconId}).toArray(function(err, docs) {
+	    if(err){
+	    	res.send(err);
+	    	res.end();
+	    }else{
+	    	if (typeof docs[0] !== 'undefined' && docs[0] !== null ) {
+	    		res.type("text/plain");
+				res.status(200).send("exist");
+				res.end();
+	    	}else{
+	    		collection.update({"user":user,"old_detail.beaconId":beaconId}, {$set: {"old_detail.$.beaconId":beaconId}},  function(err) {
 					if(err){
-					res.send("There was a problem adding the information to the database.");
-					console.log(err);		
+						res.send("There was a problem adding the information to the database.");
+						console.log(err);		
 					}else{
-					res.type("text/plain");
-					res.status(200).send("ok");
-					res.end();	
+						res.type("text/plain");
+						res.status(200).send("ok");
+						res.end();	
 					}	
 				});
-			}
-		}
-		
+	    	}
+	    }
 	});
+	// collection.find().toArray(function(err,docs){
+	// 	if(err){
+	// 		res.status(406).send(err);
+	// 		res.end();
+	// 	}else{
+	// 		var jsonData = JSON.stringify(docs);
+	// 		var jsonObj = JSON.parse(jsonData);
+	// 		var e ="";
+	// 		console.log("in find");
+	// 		for(var i =0 ; i < jsonObj.length ;i++){
+				
+	// 			if ( jsonObj[i].old_detail.beaconId == beaconId ){
+	// 				e = "exist";
+	// 				console.log("e="+e);
+	// 				break;
+	// 			} 	
+	// 			console.log("in for"+i);
+	// 		}
+			
+	// 		if ( e == "exist") { 
+	// 		console.log("in exist");
+	// 		res.type("text/plain");
+	// 		res.status(200).send("exist");
+	// 		res.end();
+	// 		}else{
+	// 			collection.update(whereName, {$set: {"old_detail.beaconId":beaconId}},  function(err) {
+	// 				if(err){
+	// 				res.send("There was a problem adding the information to the database.");
+	// 				console.log(err);		
+	// 				}else{
+	// 				res.type("text/plain");
+	// 				res.status(200).send("ok");
+	// 				res.end();	
+	// 				}	
+	// 			});
+	// 		}
+	// 	}
+		
+	// });
 });
 app.post('/updateMember',urlencodedParser,function(req,res){
 	var user = req.body.user;
@@ -640,7 +677,7 @@ app.post('/register',urlencodedParser,function(req,res){
 			"longitude" :null ,
 			"latitude" : null,
 		},
-		"old_detail":[{
+		"old_detail":[/*{
 			"beaconId":"",
 			"oldName":"",
 			"oldPic":null,
@@ -648,9 +685,10 @@ app.post('/register',urlencodedParser,function(req,res){
 			"oldhistory":"",
 			"oldclothes":"",
 			"oldaddr":"",
-			"groupMember":[]
+			"groupMember":[],
+			"status":"0"
 			
-		}]
+		}*/]
     }, function (err, doc) {
         if (err) {
             // If it failed, return error
