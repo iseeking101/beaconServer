@@ -62,12 +62,17 @@ http.get("/logout", function(req, res){
 app.get('/', function(req, res) {
 	
  
-	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/getMissingOld" method="post">' +
+	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/getOld" method="post">' +
                'Enter your name:' +
-                '<input type="text" name="longitude" placeholder="longitude" />' +
-			   '<input type="text" name="latitude" placeholder="latitude" />' +
-			  
-               
+               '<input type="text" name="user" placeholder="user" />' +
+			   //'<input type="text" name="oldName" placeholder="oldName" />' +
+			   //'<input type="text" name="oldCharacteristic" placeholder="oldCharacteristic" />' +
+			   //'<input type="text" name="oldhistory" placeholder="oldhistory" />' +
+			   //'<input type="text" name="oldaddr" placeholder="oldaddr" />' +
+			   '<input type="text" name="beaconId" placeholder="beaconId" />' +
+			   '<input type="text" name="groupMember" placeholder="groupMember" />' +
+			   '<input type="text" name="status" placeholder="status" />' +
+			   //'<input type="text" name="oldclothes" placeholder="oldclothes" />' +
       //         '<input type="text" name="user" placeholder="user" />' +
 			   //'<input type="text" name="userName" placeholder="userName" />' +
 			   //'<input type="text" name="userPhone" placeholder="userPhone" />' +
@@ -107,22 +112,23 @@ app.post('/getMissingOld',urlencodedParser,function(req,res){
 		}	
 	});
 });
+
+//取得我所有的老人資料 對應 setMyOldMan()方法
 app.post('/getOld',urlencodedParser,function(req,res){
 	 
 	
-	var whereName = {"user" : req.body.user,old_detail:{$exists:true}};
 	var collection = myDB.collection('login');
-	collection.find(whereName).toArray(function(err, docs) {
+	collection.find({"user" : req.body.user,old_detail:{$exists:true}}).toArray(function(err, docs) {
 		if(err){
 			res.status(406).send(err);
 			res.end();
 		}else{
 			if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
 			res.type('application/json');
-			var jsonData = JSON.stringify(docs);
-			var jsonObj = JSON.parse(jsonData);
-			console.log(jsonObj[0].old_detail.userName);
-			res.status(200).send(docs);
+			// var jsonData = JSON.stringify(docs);
+			// var jsonObj = JSON.parse(jsonData);
+			var old_detail = docs[0].old_detail;
+			res.status(200).send(old_detail);
 			res.end();
 			}else{
 				res.type('text/plain');
@@ -132,9 +138,83 @@ app.post('/getOld',urlencodedParser,function(req,res){
 		}
 	});
 });
+app.post('/addOld',urlencodedParser,function(req, res) {
+   	var user = req.body.user;
+	var oldName = req.body.oldName;
+	var oldCharacteristic = req.body.oldCharacteristic;
+	var oldhistory = req.body.oldhistory;
+	var oldclothes = req.body.oldclothes;
+	var oldaddr = req.body.oldaddr;
+	var beaconId = req.body.beaconId;
+ 	var collection = myDB.collection('login');
+	var whereName = {"user": user};
+	collection.update(whereName, {$push: {"old_detail":{"beaconId":beaconId,
+			"oldName":oldName,
+			"oldCharacteristic":oldCharacteristic,
+			"oldhistory":oldhistory,
+			"oldclothes":oldclothes,
+			"oldaddr":oldaddr,
+			"groupMember":[]}}},  function(err) {
+				if(err){
+					console.log(err);	
+					res.send(err);
+					res.end();
+				}else{
+					res.type('text/plain');
+					res.send("OK");
+					res.end();
+				}
+			});
 
+});
+app.post('/getOldAll',urlencodedParser,function(req, res){
+	var user = req.body.user;
+	var beaconId = req.body.beaconId;
+	var collection = myDB.collection('login');
+	collection.find({"user":user,"old_detail.beaconId":beaconId}).toArray(function(err, docs) {
+	    if(err){
+	    	res.send(err);
+	    	res.end();
+	    }else{
+			var jsonOldDetail= jsonOldDetail = docs[0].old_detail;
+
+	    	res.type("application/json");
+	    	res.send(jsonOldDetail);
+	    	res.end();
+	    }
+	});
+});
+//取得指定beaconid 老人資料
+app.post('/getOldOne',urlencodedParser,function(req, res){
+	var user = req.body.user;
+	var beaconId = req.body.beaconId;
+	var collection = myDB.collection('login');
+	collection.find({"user":user,"old_detail.beaconId":beaconId}).toArray(function(err, docs) {
+	    if(err){
+	    	res.send(err);
+	    	res.end();
+	    }else{
+			var jsonOldDetail;
+			var endv;
+			for(var i =0 ; i < docs.length ;i++){
+				jsonOldDetail = docs[i].old_detail;
+				for(var j = 0 ;j<jsonOldDetail.length;j++){
+					if(jsonOldDetail[i].beaconId == beaconId){
+						endv = jsonOldDetail[i];
+						break;
+					}
+				}
+			
+			}
+	    	res.type("application/json");
+	    	res.send(endv);
+	    	res.end();
+	    }
+	});
+});
 app.post('/groupService',urlencodedParser,function(req,res){
 	var user = req.body.user;
+	var beaconId =req.body.beaconId;
 	var collection = myDB.collection('login');
 	//1 for add groupMember.
 	var groupMemberv = req.body.groupMember;
@@ -158,13 +238,16 @@ app.post('/groupService',urlencodedParser,function(req,res){
 				} 	
 				console.log("in for"+i);
 			}
-			
+			//如果有此帳號則
 			if ( e == "exist") { 
 				console.log("in exist");
-				// $in means there are fit words in field
-				collection.find({"user":user, "old_detail.groupMember":{ $in:[groupMemberv]}}).toArray(function(err, docs) {
+				// {foo: {"$elemMatch": {shape: "square", color: "purple"}}
+				// $in means there are fit words in field  ,{"old_detail.groupMember":{ $in:[groupMemberv]}}
+				//查詢old_detail中同時包含 beaconid 相同 及 有同樣的groupMember
+				// {old_detail:{"$elemMatch":{"beaconId":beaconId,"groupMember":{ $in:[groupMemberv]}}}}
+				collection.find({old_detail:{"$elemMatch":{"beaconId":beaconId,"groupMember":{ $in:[groupMemberv]}}}}).toArray(function(err, docs) {
 				    if(err){
-				    	res.send("There was a problem adding the information to the database.");
+				    	res.send("There was a problem adding the information to the database.$in is wrong");
 						console.log(err);
 				    	
 				    }else{
@@ -173,16 +256,17 @@ app.post('/groupService',urlencodedParser,function(req,res){
 							res.status(200).send("exist");
 							res.end();	
 						}else{
-							collection.update({"user":user,"old_detail.groupMember":{$ne:groupMemberv}}, {$push: {"old_detail.groupMember":groupMemberv}},  function(err) {
-				  				if(err){
-									res.send("There was a problem adding the information to the database.");
+							//指定前面query的結果 用$ 指定陣列位置 
+							collection.update({"user":user,"old_detail.beaconId":beaconId}, {$push:{"old_detail.$.groupMember":groupMemberv}},  function(err) {
+					  			if(err){
+									res.send("There was a problem adding the information to the database.$ne is wromg");
 									console.log(err);		
 								}else{
 									res.type("text/plain");
 									res.status(200).send("ok");
 									res.end();	
 								}
-							});
+							});		
 						}
 				    }
 				});
@@ -197,17 +281,18 @@ app.post('/groupService',urlencodedParser,function(req,res){
 	}
 	//2 for getAllGroupMember.
 	if(req.body.status == "2"){
-		var whereName = {"user" : user, "old_detail.groupMember":{$exists:true}};
-		collection.find(whereName).toArray(function(err,docs){
+		//"old_detail.groupMember":{$exists:true}
+		//此查詢會回傳old_detail內的第一筆資料{"user":user,"old_detail.beaconId":beaconId},{"old_detail.$":1}
+		collection.find( {"user":user,"old_detail.beaconId":beaconId,"old_detail.groupMember":{$exists:true}}).toArray(function(err,docs){
 			if(err){
 				res.status(406).send(err);
 				res.end();
 			}else{
 				if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
 					res.type('application/json');
-					var jsonData = JSON.stringify(docs);
-					var jsonObj = JSON.parse(jsonData);
-					console.log(jsonObj[0].detail.userName);
+					// var jsonData = JSON.stringify(docs);
+					// var jsonObj = JSON.parse(jsonData);
+					// console.log(jsonObj[0].detail.userName);
 					res.status(200).send(docs);
 					res.end();
 				}else{
@@ -246,6 +331,8 @@ app.post('/groupService',urlencodedParser,function(req,res){
 					}
 				}
 			});
+			res.send("no status !");
+			res.end();
 	}
 	//判斷某物件裡有沒有資料
 	// if(req.body.status == "4" ){
@@ -496,6 +583,7 @@ app.post('/testMail',urlencodedParser,function(req,res){
 			}
 			});
 });
+
 app.post('/register',urlencodedParser,function(req,res){
 	console.log("in register app");
     var user_name = req.body.user;
@@ -540,16 +628,17 @@ app.post('/register',urlencodedParser,function(req,res){
 			"longitude" :null ,
 			"latitude" : null,
 		},
-		"old_detail":{
+		"old_detail":[{
 			"beaconId":"",
 			"oldName":"",
+			"oldPic":null,
 			"oldCharacteristic":"",
 			"oldhistory":"",
 			"oldclothes":"",
 			"oldaddr":"",
 			"groupMember":[]
 			
-		}
+		}]
     }, function (err, doc) {
         if (err) {
             // If it failed, return error
