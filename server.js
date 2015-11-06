@@ -62,16 +62,16 @@ http.get("/logout", function(req, res){
 app.get('/', function(req, res) {
 	
  
-	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/getOld" method="post">' +
+	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/testa" method="post">' +
                'Enter your name:' +
                '<input type="text" name="user" placeholder="user" />' +
 			   //'<input type="text" name="oldName" placeholder="oldName" />' +
 			   //'<input type="text" name="oldCharacteristic" placeholder="oldCharacteristic" />' +
 			   //'<input type="text" name="oldhistory" placeholder="oldhistory" />' +
 			   //'<input type="text" name="oldaddr" placeholder="oldaddr" />' +
-			   '<input type="text" name="beaconId" placeholder="beaconId" />' +
+			   '<input type="text" name="beaconI" placeholder="beaconId" />' +
 			   '<input type="text" name="groupMember" placeholder="groupMember" />' +
-			   '<input type="text" name="status" placeholder="status" />' +
+			   '<input type="text" name="statuscv" placeholder="statusv" />' +
 			   //'<input type="text" name="oldclothes" placeholder="oldclothes" />' +
       //         '<input type="text" name="user" placeholder="user" />' +
 			   //'<input type="text" name="userName" placeholder="userName" />' +
@@ -218,7 +218,7 @@ app.post('/groupService',urlencodedParser,function(req,res){
 	var collection = myDB.collection('login');
 	//1 for add groupMember.
 	var groupMemberv = req.body.groupMember;
-	if(req.body.status == "1"){
+	if(req.body.statusv == "1"){
 		
 		collection.find().toArray(function(err,docs){
 		if(err){
@@ -280,7 +280,7 @@ app.post('/groupService',urlencodedParser,function(req,res){
 	
 	}
 	//2 for getAllGroupMember.
-	if(req.body.status == "2"){
+	if(req.body.statusv == "2"){
 		//"old_detail.groupMember":{$exists:true}
 		//此查詢會回傳old_detail內的第一筆資料{"user":user,"old_detail.beaconId":beaconId},{"old_detail.$":1}
 		collection.find( {"user":user,"old_detail.beaconId":beaconId,"old_detail.groupMember":{$exists:true}}).toArray(function(err,docs){
@@ -303,37 +303,7 @@ app.post('/groupService',urlencodedParser,function(req,res){
 			}
 		});
 	}
-	if(req.body.status =="3"){
-		var oldNames ="";
-			//尋找login裡任groupMember裡面含有d帳號的使用者帳號 返回給app
-			collection.find({"old_detail.groupMember": {$in:[user]}}).toArray(function(err, docs) {
-				if(err){
-					res.status(406).send(err);
-					res.end();
-				}else{
-					if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
-							res.type("application/json");
-							// var jsonData = JSON.stringify(docs);
-							// var jsonObj = JSON.parse(jsonData);
-							// for(var i = 0 ; i < docs.length ; i++){
-								
-							// 	oldNames += jsonObj[i].old_detail.oldName;
-							// 	if(i<(docs.length)-1){
-							// 		oldNames += ",";
-							// 	}
-							// }
-							res.status(200).send(docs);
-							res.end();
-					}else{
-						res.type("text/plain");
-						res.status(200).send("nothing");
-						res.end();
-					}
-				}
-			});
-			res.send("no status !");
-			res.end();
-	}
+	
 	//判斷某物件裡有沒有資料
 	// if(req.body.status == "4" ){
 	// 	//查beaconid 有沒有登入,沒有就不能進入群組
@@ -365,9 +335,50 @@ app.post('/groupService',urlencodedParser,function(req,res){
 	// 		});
 		
 	// }
+	res.send("no status !");
+	res.end();
+});
+//
+app.post('/getWhoFollowMe',urlencodedParser,function(req, res) {
+   var collection = myDB.collection('login');
+   
+		//尋找login裡任groupMember裡面含有d帳號的使用者帳號 返回給app 
+		collection.find({"old_detail.groupMember": {$in:[req.body.user]}}).toArray(function(err,docs){
+			if(err){
+				res.status(406).send(err);
+				res.end();
+			}else{
+				if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
+					res.type('application/json');
+					// var jsonData = JSON.stringify(docs);
+					// var jsonObj = JSON.parse(jsonData);
+					// console.log(jsonObj[0].detail.userName);
+					res.status(200).send(docs);
+					res.end();
+				}else{
+					res.type('text/plain');
+					res.status(200).send("no detail");
+					res.end();
+				}
+			}
+		});
+			// collection.find({"user":user}).toArray(function(err, docs) {
+			// 	if(err){
+			// 		res.send(err);
+			// 		res.end();
+			// 	}else{
+			// 		if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
+			// 				res.status(200).send(docs);
+			// 				res.end();
+			// 		}else{
+			// 			res.type("text/plain");
+			// 			res.status(200).send("nothing");
+			// 			res.end();
+			// 		}
+			// 	}
+			// });
 	
 });
-
 app.post('/getMember',urlencodedParser,function(req,res){
 	 
 	
