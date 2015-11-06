@@ -504,6 +504,7 @@ app.post('/login',urlencodedParser,function(req,res){
   if(req.session.user){
 	  res.type('text/plain');
 	  res.status(200).send("1");  
+	  res.end();
   }
   else{
   //sess.cookie.maxAge = 5000;
