@@ -62,7 +62,7 @@ http.get("/logout", function(req, res){
 app.get('/', function(req, res) {
 	
  
-	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/getMissingOld" method="post">' +
+	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/getMyFollow" method="post">' +
                'Enter your name:' +
                '<input type="text" name="user" placeholder="user" />' +
 			   '<input type="text" name="oldName" placeholder="oldName" />' +
@@ -71,7 +71,7 @@ app.get('/', function(req, res) {
 			   '<input type="text" name="oldaddr" placeholder="oldaddr" />' +
 			   '<input type="text" name="beaconId" placeholder="beaconId" />' +
 			   '<input type="text" name="groupMember" placeholder="groupMember" />' +
-			   '<input type="text" name="statuscv" placeholder="statusv" />' +
+			   '<input type="text" name="statusv" placeholder="statusv" />' +
 			   '<input type="text" name="oldclothes" placeholder="oldclothes" />' +
       //         '<input type="text" name="user" placeholder="user" />' +
 			   //'<input type="text" name="userName" placeholder="userName" />' +
@@ -208,6 +208,29 @@ app.post('/getOldAll',urlencodedParser,function(req, res){
 	    }
 	});
 });
+
+app.post('/getMyFollow',urlencodedParser,function(req, res) {
+	var collection = myDB.collection('login');
+	var user = req.body.user;
+	
+    	collection.find({"old_detail.groupMember":{ $in:[user]}}).toArray(function(err, docs) {
+		    if(err){
+		    	res.status(406).send(err);
+		    	res.end();
+		    }else{
+			   if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
+			   		res.status(200)
+			   		res.send(docs);
+			   		res.end();
+			   }else{
+			   		res.type('text/plain');
+					res.status(200).send("no detail");
+					res.end();
+			   }
+		    }
+		});
+	
+})
 //取得指定beaconid 老人資料
 app.post('/getOldOne',urlencodedParser,function(req, res){
 	var user = req.body.user;
@@ -242,7 +265,8 @@ app.post('/groupService',urlencodedParser,function(req,res){
 	var collection = myDB.collection('login');
 	//1 for add groupMember.
 	var groupMemberv = req.body.groupMember;
-	if(req.body.statusv == "1"){
+	var statusv = req.body.statusv;
+	if(statusv == "1"){
 		
 		collection.find().toArray(function(err,docs){
 		if(err){
@@ -304,7 +328,7 @@ app.post('/groupService',urlencodedParser,function(req,res){
 	
 	}
 	//2 for getAllGroupMember.
-	if(req.body.statusv == "2"){
+	if(statusv == "2"){
 		//"old_detail.groupMember":{$exists:true}
 		//此查詢會回傳old_detail內的第一筆資料{"user":user,"old_detail.beaconId":beaconId},{"old_detail.$":1}
 		collection.find( {"user":user,"old_detail.beaconId":beaconId,"old_detail.groupMember":{$exists:true}}).toArray(function(err,docs){
@@ -327,6 +351,7 @@ app.post('/groupService',urlencodedParser,function(req,res){
 			}
 		});
 	}
+	//取得groupMember中含有自己帳號的老人資料 返回給app
 	
 	//判斷某物件裡有沒有資料
 	// if(req.body.status == "4" ){
