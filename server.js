@@ -191,6 +191,28 @@ app.post('/addOld',urlencodedParser,function(req, res) {
 	    }
 	});
 });
+app.post('/checkBeaconId',urlencodedParser,function(req,res){
+	var user = req.body.user;
+	var beaconId = req.body.beaconId;
+ 	var collection = myDB.collection('login');
+ 	//查詢是否有人使用過這個beaconId
+	collection.find({"old_detail.beaconId":beaconId}).toArray(function(err, docs) {
+	    if(err){
+	    	res.send(err);
+	    	res.end();
+	    }else{
+	    	if (typeof docs[0] !== 'undefined' && docs[0] !== null ) {
+	    		res.type("text/plain");
+				res.status(200).send("exist");
+				res.end();
+	    	}else{
+	    		
+				res.type("text/plain");
+				res.status(200).send("ok");
+				res.end();	
+			}
+	    }
+	});
 app.post('/getOldAll',urlencodedParser,function(req, res){
 	var user = req.body.user;
 	var beaconId = req.body.beaconId;
