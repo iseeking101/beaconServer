@@ -213,6 +213,7 @@ app.post('/checkBeaconId',urlencodedParser,function(req,res){
 			}
 	    }
 	});
+});
 app.post('/getOldAll',urlencodedParser,function(req, res){
 	var user = req.body.user;
 	var beaconId = req.body.beaconId;
