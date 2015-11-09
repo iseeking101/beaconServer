@@ -62,7 +62,7 @@ http.get("/logout", function(req, res){
 app.get('/', function(req, res) {
 	
  
-	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/addOld" method="post">' +
+	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/getMissingOld" method="post">' +
                'Enter your name:' +
                '<input type="text" name="user" placeholder="user" />' +
 			   '<input type="text" name="oldName" placeholder="oldName" />' +
@@ -92,16 +92,26 @@ app.get('/', function(req, res) {
 	res.status(200).send(html);
 	res.end();
 });
+//statusv = 1 表示失蹤  new
 app.post('/getMissingOld',urlencodedParser,function(req,res){
 	var collection = myDB.collection('login');
 	var whereStatus = {"status":"1"};
-	collection.find(whereStatus).toArray(function(err,docs){
+	collection.find({"old_detail.statusv":"1"}).toArray(function(err,docs){
 		if(err){
 			res.status(406).send(err);
 			res.end();
 		}else{
 			if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
+				var old_detail
 				res.type('application/json');
+				//只列失蹤老人
+				// for(var i =0;i<docs.length;i++){
+				// 	for(var j =0;j<docs[i].old_detail.length;j++){
+				// 		if(docs[i].old_detail[j].statusv=="0"){
+							
+				// 		}
+				// 	}
+				// }
 				res.status(200).send(docs);
 				res.end();
 			}else{
