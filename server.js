@@ -1,6 +1,7 @@
 
 var express = require('express');
 var mongodb = require('mongodb');
+var GCMmongodb = require('mongodb');
 var bodyParser = require('body-parser');
 var app = express();
 var nodemailer = require("nodemailer");
@@ -8,7 +9,7 @@ var md5 = require('md5');
 var http = require('http');
 var session = require('express-session');
 var cookieParser = require('cookie-parser');
-
+var gcm = require('node-gcm');
 app.use(cookieParser());
 app.use(session({secret:'wj;oeifj;wa',
 				saveUninitialized:true,
@@ -47,6 +48,17 @@ mongodb.MongoClient.connect(mongodbURL, function(err, db) {
 		console.log('connection success');
 	}
 });
+var mongodbGCMURL = 'mongodb://iseeking101:iseeking2015@ds045064.mongolab.com:45064/android-gcm-push-db';
+var gcmDB;
+
+GCMmongodb.MongoClient.connect(mongodbGCMURL, function(err, db) {
+	if (err) {
+		console.log(err);
+	} else {
+		gcmDB = db;
+		console.log('gcmdb connection success');
+	}
+});
 
 
 
@@ -62,7 +74,7 @@ http.get("/logout", function(req, res){
 app.get('/', function(req, res) {
 	
  
-	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/getMyFollow" method="post">' +
+	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/send" method="post">' +
                'Enter your name:' +
                '<input type="text" name="user" placeholder="user" />' +
 			   '<input type="text" name="oldName" placeholder="oldName" />' +
@@ -92,7 +104,97 @@ app.get('/', function(req, res) {
 	res.status(200).send(html);
 	res.end();
 });
-//statusv = 1 表示失蹤  new
+
+
+
+
+
+
+//gcm
+app.post('/send',urlencodedParser,function(req,res){
+
+  //req.body.longitude,req.body.latitude
+    
+	var registration_ids = [];
+
+	
+	var message = new gcm.Message({
+		id: 1,
+		collapseKey: 'demo',
+		data: {
+		
+		},
+		notification: {
+			title: "Hello, World",
+			icon: "ic_launcher",
+			body: "This is a notification that will be displayed ASAP."
+		}
+	});
+	
+	var gcm_connection = new gcm.Sender("AIzaSyD7ri5BkzqDX4ZzZDK9XfSnAjpw-Md8Ptc");
+
+	//要從手機post過來的參數
+	var oldName = req.body.oldName
+    var longitude = parseFloat(req.body.longitude);
+    var latitude = parseFloat(req.body.latitude);
+	// var longitude = 121.3329606;
+ //   var latitude = 24.9941045;
+	// var oldName = "鄒雅雯";
+	var GCMcollection = gcmDB.collection('pushassociations');
+    var collection = myDB.collection('login'); 
+    var leftLongitude = longitude-0.2;
+    var rightLongitude = longitude + 0.2;
+    var leftLatitude = latitude - 0.2;
+    var rightLatitude = latitude +0.2; 
+    //console.log("leftLongitude = "+leftLongitude +" rightLongitude = "+ rightLongitude
+    //    + " leftLatitude = "+leftLatitude +" rightLatitude = " + rightLatitude); 
+    //查詢user位置是否在範圍內 將user 帳號擺入陣列
+    //aa方法處理完成後呼叫gcmpush
+    function aa(token,gcmPush){
+    	registration_ids.push(token);
+    	console.log("token = "+token);
+    	gcmPush(registration_ids);
+    }
+    function gcmPush(registration_ids){
+    		gcm_connection.send(message, registration_ids, 4, function(err, result) {
+				if (err) { throw err }
+				console.log(result);
+			});
+    }
+    var where = {"detail.longitude":{"$gt":leftLongitude,"$lt":rightLongitude},"detail.latitude":{"$gt":leftLatitude,"$lt":rightLatitude}};
+    collection.find(where).toArray(function(err,docs){
+        if(err){
+            console.log(err);
+            return err;
+        }else{
+            for(var i = 0 ; i< docs.length ; i++){
+                console.log(docs[i].user);
+                var user = docs[i].user;
+            	message.addData("message",oldName+"  在您的附近走失了，請幫忙注意，謝謝!");
+			
+                GCMcollection.find({"user":user}).toArray(function(err,docs){
+                	if(err){
+                		res.send(err);
+                		res.end();
+                	}else{
+                		if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
+							var token = docs[0].token;
+							aa(token,gcmPush);
+							
+                		}else{
+                			res.send('onthing');
+                			res.end();
+                			
+                		}
+					}	
+                });
+            }
+        }
+	}); 
+});
+
+
+
 app.post('/getMissingOld',urlencodedParser,function(req,res){
 	var collection = myDB.collection('login');
 	var whereStatus = {"status":"1"};
