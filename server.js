@@ -91,8 +91,8 @@ app.get('/', function(req, res) {
 			   //'<input type="text" name="userAddress" placeholder="userAddress" />' +
 			   //'<input type="text" name="reward" placeholder="reward" />' +
 			   //'<input type="text" name="location" placeholder="location" />' +
-			   //'<input type="text" name="longitude" placeholder="longitude" />' +
-			   //'<input type="text" name="latitude" placeholder="latitude" />' +
+			   '<input type="text" name="longitude" placeholder="longitude" />' +
+			   '<input type="text" name="latitude" placeholder="latitude" />' +
 			   
 			   //'<input type="text" name="groupMember" placeholder="..." />' +
 			   
@@ -134,6 +134,8 @@ app.post('/send',urlencodedParser,function(req,res){
 	var gcm_connection = new gcm.Sender("AIzaSyD7ri5BkzqDX4ZzZDK9XfSnAjpw-Md8Ptc");
 
 	//要從手機post過來的參數
+	var user = req.body.user
+	var beaconId =req.body.beaconId
 	var oldName = req.body.oldName
     var longitude = parseFloat(req.body.longitude);
     var latitude = parseFloat(req.body.latitude);
@@ -150,17 +152,59 @@ app.post('/send',urlencodedParser,function(req,res){
     //    + " leftLatitude = "+leftLatitude +" rightLatitude = " + rightLatitude); 
     //查詢user位置是否在範圍內 將user 帳號擺入陣列
     //aa方法處理完成後呼叫gcmpush
-    function aa(token,gcmPush){
-    	registration_ids.push(token);
-    	console.log("token = "+token);
-    	gcmPush(registration_ids);
-    }
-    function gcmPush(registration_ids){
+    
+    var gcmPush =function (registration_ids){
+    		
     		gcm_connection.send(message, registration_ids, 4, function(err, result) {
 				if (err) { throw err }
-				console.log(result);
-				
+				if(result){
+					console.log(result);
+					
+				}
 			});
+    }
+    function setStatusvUpdate(){
+    	collection.update({"old_detail.beaconId":beaconId},{$set:{"old_detail.$.statusv":"1"}},function(err) {
+    	  if(err){
+    	  	console.log(err);
+    	  }else{
+    	  	console.log("update statusv ok ");	
+    	  }
+    	});
+    }
+   // var setNearbyUserToAry =function (docs,setTokenv){
+   // 	console.log("in 1");
+   // 	var user = [];
+   // 	 for(var i = 0 ; i< docs.length ; i++){
+   //             console.log(docs[i].user);
+   //             user.push(docs[i].user);
+    	 	
+   // 	}
+   // 	setTokenv(user);
+   // }
+   //var setTokenv =  function (user){
+   // 	console.log("in 2");
+   // 	GCMcollection.find({"user":{ $in:user}}).toArray(function(err,docs){
+   //         if(err){
+	  //          res.send(err);
+	  //        	res.end();
+   //         }else{
+   //         	setInRegist(docs);
+   //         }
+   // 	});
+   // }
+   //var setInRegist = function (docs,aa){
+   // 	console.log("in 3");
+   // 	for(var i = 0 ; i< docs.length ; i++){
+   //             console.log(docs[i].token);
+   //             registration_ids.push(docs[i].token);
+   // 	}
+   // 	aa(registration_ids);
+   // }
+    var aa =function(token,gcmPush){
+    	console.log("in 4");
+    	console.log("token = "+token);
+    	gcmPush(token);
     }
     var where = {"detail.longitude":{"$gt":leftLongitude,"$lt":rightLongitude},"detail.latitude":{"$gt":leftLatitude,"$lt":rightLatitude}};
     collection.find(where).toArray(function(err,docs){
@@ -169,11 +213,14 @@ app.post('/send',urlencodedParser,function(req,res){
             return err;
         }else{
        		if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
+       			setStatusvUpdate();
+       			//setNearbyUserToAry(docs);
             for(var i = 0 ; i< docs.length ; i++){
                 console.log(docs[i].user);
                 var user = docs[i].user;
             	message.addData("message",oldName+"  在您的附近走失了，請幫忙注意，謝謝!");
-			
+				message.addData("longitude" , longitude);
+				message.addData("latitude",latitude);
                 GCMcollection.find({"user":user}).toArray(function(err,docs2){
                 	if(err){
                 		res.send(err);
@@ -181,6 +228,7 @@ app.post('/send',urlencodedParser,function(req,res){
                 	}else{
                 		if (typeof docs2[0] !== 'undefined' && docs2[0] !== null ) { 
 							var token = docs2[0].token;
+							registration_ids.push(token);
 							aa(token,gcmPush);
 							
                 		}else{
@@ -191,8 +239,10 @@ app.post('/send',urlencodedParser,function(req,res){
 					}	
                 });
             }
+            // 修改狀態為走失 statusv=1
+		    
            	    res.send("ok");
-				res.end();
+			    
        		}else{
         	    res.send("nothing");
 				res.end();
