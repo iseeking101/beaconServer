@@ -159,6 +159,7 @@ app.post('/send',urlencodedParser,function(req,res){
     		gcm_connection.send(message, registration_ids, 4, function(err, result) {
 				if (err) { throw err }
 				console.log(result);
+				
 			});
     }
     var where = {"detail.longitude":{"$gt":leftLongitude,"$lt":rightLongitude},"detail.latitude":{"$gt":leftLatitude,"$lt":rightLatitude}};
@@ -167,18 +168,19 @@ app.post('/send',urlencodedParser,function(req,res){
             console.log(err);
             return err;
         }else{
+       		if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
             for(var i = 0 ; i< docs.length ; i++){
                 console.log(docs[i].user);
                 var user = docs[i].user;
             	message.addData("message",oldName+"  在您的附近走失了，請幫忙注意，謝謝!");
 			
-                GCMcollection.find({"user":user}).toArray(function(err,docs){
+                GCMcollection.find({"user":user}).toArray(function(err,docs2){
                 	if(err){
                 		res.send(err);
                 		res.end();
                 	}else{
-                		if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
-							var token = docs[0].token;
+                		if (typeof docs2[0] !== 'undefined' && docs2[0] !== null ) { 
+							var token = docs2[0].token;
 							aa(token,gcmPush);
 							
                 		}else{
@@ -189,6 +191,12 @@ app.post('/send',urlencodedParser,function(req,res){
 					}	
                 });
             }
+           	    res.send("ok");
+				res.end();
+       		}else{
+        	    res.send("nothing");
+				res.end();
+       		}
         }
 	}); 
 });
