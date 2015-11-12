@@ -134,8 +134,6 @@ app.post('/send',urlencodedParser,function(req,res){
   //req.body.longitude,req.body.latitude
     
 	var registration_ids = [];
-
-	
 	var message = new gcm.Message({
 		id: 1,
 		collapseKey: 'demo',
@@ -170,48 +168,7 @@ app.post('/send',urlencodedParser,function(req,res){
     //    + " leftLatitude = "+leftLatitude +" rightLatitude = " + rightLatitude); 
     //查詢user位置是否在範圍內 將user 帳號擺入陣列
     //aa方法處理完成後呼叫gcmpush
-    
-    var gcmPush =function (registration_ids){
-    		
-    		gcm_connection.send(message, registration_ids, 4, function(err, result) {
-				if (err) { throw err }
-				if(result){
-					console.log(result);
-					
-				}
-			});
-    }
-    
-   // var setNearbyUserToAry =function (docs,setTokenv){
-   // 	console.log("in 1");
-   // 	var user = [];
-   // 	 for(var i = 0 ; i< docs.length ; i++){
-   //             console.log(docs[i].user);
-   //             user.push(docs[i].user);
-    	 	
-   // 	}
-   // 	setTokenv(user);
-   // }
-   //var setTokenv =  function (user){
-   // 	console.log("in 2");
-   // 	GCMcollection.find({"user":{ $in:user}}).toArray(function(err,docs){
-   //         if(err){
-	  //          res.send(err);
-	  //        	res.end();
-   //         }else{
-   //         	setInRegist(docs);
-   //         }
-   // 	});
-   // }
-   //var setInRegist = function (docs,aa){
-   // 	console.log("in 3");
-   // 	for(var i = 0 ; i< docs.length ; i++){
-   //             console.log(docs[i].token);
-   //             registration_ids.push(docs[i].token);
-   // 	}
-   // 	aa(registration_ids);
-   // }
-   
+
    function setStatusvUpdate(){
 		
     	collection.update({"old_detail.beaconId":beaconId},{$set:{"old_detail.$.statusv":"0"}},function(err) {
@@ -221,16 +178,75 @@ app.post('/send',urlencodedParser,function(req,res){
     	  	res.end();
     	  }else{
     	  	console.log("update statusv ok ");	
-    	  	res.send("ok");
-    	  	res.end();
+    	  	// res.send("ok");
+    	  	// res.end();
+    	  	
     	  }
     	});
     }
-    var aa =function(token,gcmPush){
-    	console.log("in 4");
-    	console.log("token = "+token);
-    	gcmPush(token);
+	message.addData("message",oldName+"  在您的附近走失了，請幫忙注意，謝謝!");
+	message.addData("longitude" , longitude);
+	message.addData("latitude", latitude);
+	// registration_ids.push("APA91bHOQez8fEHFZWLr97fvb7HxxfXcUPOHQ_XCEs1KSX0bmY8Xeq5SPqrdLgdrC5GCR6NG7m0bvxJoOVxw4mK5VHA3NSwXyuc7ibzNeick_0CuPutlQcUtmorgAoE9gXUFt0hWHRsw");
+	// registration_ids.push("APA91bHOQez8fEHFZWLr97fvb7HxxfXcUPOHQ_XCEs1KSX0bmY8Xeq5SPqrdLgdrC5GCR6NG7m0bvxJoOVxw4mK5VHA3NSwXyuc7ibzNeick_0CuPutlQcUtmorgAoE9gXUFt0hWHRsw");
+	// registration_ids.push("APA91bGmIcsXRlgYgQaRysqUVMlfCbsuKCXbHJJsyd2_R8xWataHDns-pDXp_JuIbg8dbio0eEMBtGuDacBKGDbhQMQ0ElpG-Rzwuq42FOkiihLA56B9PaimHlnMGJS5PJoM-G28Mj8J");
+	// registration_ids.push("APA91bGtoeHyBr7wan-DcwzUY_ejvS3Jdpz75Pb1pMNPRDFS9EW-UlXqr7pFGKWZElbfS8g2fpW-11yYlp3Rf_278u_Li1pclyg7w1gYC42AL27U3IyaoJdZEPgSkFoEau_9JK7IpsFZ");
+	// registration_ids.push("APA91bGkoM8GDTXgDqVnYKWFHkmg8ld_y8YtD6Bg33oPugppeo7wgj7bZoFsWNRe-cmWJrc9zMvZwboGLBkydqcNSQMnAVxoL-i_nHMlwjBkknPaNipyRpyRQHdu7CDtqlxAMSOmlul2");
+	// registration_ids.push("APA91bGtoeHyBr7wan-DcwzUY_ejvS3Jdpz75Pb1pMNPRDFS9EW-UlXqr7pFGKWZElbfS8g2fpW-11yYlp3Rf_278u_Li1pclyg7w1gYC42AL27U3IyaoJdZEPgSkFoEau_9JK7IpsFZ");
+	// gcm_connection.send(message, registration_ids, 4, function(err, result) {
+	// 							if (err) {  res.send(err);}
+	// 							if(result){
+	// 							console.log(result);
+	// 							}
+	// 						});	
+    function aa(callback,docs){
+    	var user = [];
+ 		for(var i = 0 ; i< docs.length ; i++){
+ 			user.push(docs[i].user);
+ 		}
+    	callback(user);
     }
+    function bb(user){
+    	console.log("bb.user = "+user);
+    	
+		GCMcollection.find({"user":{ $in:user}}).toArray(function(err,docs2){
+                	if(err){
+                		res.send(err);
+                		res.end();
+                	}else{
+                		if (typeof docs2[0] !== 'undefined' && docs2[0] !== null ) { 
+                			// for (var i =0;i<docs2.length;i++){
+                			// 	console.log("token:"+docs2[i].token);
+                			// 	registration_ids.push(docs2[i].token);	
+                			// }
+                			ba(function(registration_ids){ cc(registration_ids);},docs2);
+							
+                		}else{
+                			console.log("gcm no user around");
+                		}
+					}	
+                });
+		
+    }	
+    function cc(registration_ids){
+    	console.log(registration_ids);
+   			gcm_connection.send(message, registration_ids, 4, function(err, result) {
+								if (err) {  res.send(err);}
+								if(result){
+								console.log(result);
+								res.status('200').send('ok');
+								res.end();
+								}
+							});	
+    }
+    function ba(callback,docs2){
+    		for (var i =0;i<docs2.length;i++){
+                console.log("token:"+docs2[i].token);
+               	registration_ids.push(docs2[i].token);	
+            }
+       	callback(registration_ids);
+    }
+
     var where = {"detail.longitude":{"$gt":leftLongitude,"$lt":rightLongitude},"detail.latitude":{"$gt":leftLatitude,"$lt":rightLatitude}};
     collection.find(where).toArray(function(err,docs){
         if(err){
@@ -238,36 +254,41 @@ app.post('/send',urlencodedParser,function(req,res){
             return err;
         }else{
        		if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
-       			
-       		//	setNearbyUserToAry(docs);
-            for(var i = 0 ; i< docs.length ; i++){
-                console.log(docs[i].user);
-                var user = docs[i].user;
-            	message.addData("message",oldName+"  在您的附近走失了，請幫忙注意，謝謝!");
-				message.addData("longitude" , longitude);
-				message.addData("latitude",latitude);
-                GCMcollection.find({"user":user}).toArray(function(err,docs2){
-                	if(err){
-                		res.send(err);
-                		res.end();
-                	}else{
-                		if (typeof docs2[0] !== 'undefined' && docs2[0] !== null ) { 
-							var token = docs2[0].token;
-							registration_ids.push(token);
-							aa(token,gcmPush);
-							
-                		}else{
-                			res.send('onthing');
-                			res.end();
+       				//發gcm 流程: aa 將docs內user取出做成array傳入bb，bb比對user取得各token放入ba加入token陣列，最後傳給c 發送GCM
+       				 aa(function(user){bb(user);},docs);
+     //  		//	setNearbyUserToAry(docs);
+     //       for(var i = 0 ; i< docs.length ; i++){
+            	
+     //           console.log(docs[i].user);
+     //           var user = docs[i].user;
+            	
+     //           GCMcollection.find({"user":user}).toArray(function(err,docs2){
+     //           	if(err){
+     //           		res.send(err);
+     //           		res.end();
+     //           	}else{
+     //           		if (typeof docs2[0] !== 'undefined' && docs2[0] !== null ) { 
+					// 		var token = docs2[0].token;
+					// 		console.log(docs2);
+					// 		registration_ids.push(token);
+					// 		// gcm_connection.send(message, registration_ids, 4, function(err, result) {
+					// 		// 	if (err) { throw err }
+					// 		// 	if(result){
+					// 		// 	console.log(result);
+					// 		// 	}
+					// 		// });
+					// 		console.log(i);
+     //           		}else{
+     //           			res.send('gcm onthing');
+     //           			res.end();
                 			
-                		}
-					}	
-                });
-            }
-            // 修改狀態為走失 statusv=1
+     //           		}
+					// }	
+     //           });
+     //       }
+     //       // 修改狀態為走失 statusv=1
 		    	setStatusvUpdate();
-           	    res.send("ok");
-			    
+           	    
        		}else{
         	    res.send("nothing");
 				res.end();
