@@ -171,7 +171,7 @@ app.post('/send',urlencodedParser,function(req,res){
 
    function setStatusvUpdate(){
 		
-    	collection.update({"old_detail.beaconId":beaconId},{$set:{"old_detail.$.statusv":"0"}},function(err) {
+    	collection.update({"old_detail.beaconId":beaconId},{$set:{"old_detail.$.statusv":"1"}},function(err) {
     	  if(err){
     	  	console.log(err);
     	  	res.send(err);
