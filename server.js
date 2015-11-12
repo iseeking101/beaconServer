@@ -211,6 +211,21 @@ app.post('/send',urlencodedParser,function(req,res){
    // 	}
    // 	aa(registration_ids);
    // }
+   
+   function setStatusvUpdate(){
+		
+    	collection.update({"old_detail.beaconId":beaconId},{$set:{"old_detail.$.statusv":"0"}},function(err) {
+    	  if(err){
+    	  	console.log(err);
+    	  	res.send(err);
+    	  	res.end();
+    	  }else{
+    	  	console.log("update statusv ok ");	
+    	  	res.send("ok");
+    	  	res.end();
+    	  }
+    	});
+    }
     var aa =function(token,gcmPush){
     	console.log("in 4");
     	console.log("token = "+token);
@@ -224,7 +239,7 @@ app.post('/send',urlencodedParser,function(req,res){
         }else{
        		if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
        			
-       			//setNearbyUserToAry(docs);
+       		//	setNearbyUserToAry(docs);
             for(var i = 0 ; i< docs.length ; i++){
                 console.log(docs[i].user);
                 var user = docs[i].user;
@@ -250,7 +265,7 @@ app.post('/send',urlencodedParser,function(req,res){
                 });
             }
             // 修改狀態為走失 statusv=1
-		    
+		    	setStatusvUpdate();
            	    res.send("ok");
 			    
        		}else{
