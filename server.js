@@ -105,7 +105,25 @@ app.get('/', function(req, res) {
 	res.end();
 });
 
-
+app.post('/updateStatusv',urlencodedParser,function(req, res){
+	var collection = myDB.collection('login'); 
+	var beaconId = req.body.beaconId;
+    function setStatusvUpdate(){
+		
+    	collection.update({"old_detail.beaconId":beaconId},{$set:{"old_detail.$.statusv":"0"}},function(err) {
+    	  if(err){
+    	  	console.log(err);
+    	  	res.send(err);
+    	  	res.end();
+    	  }else{
+    	  	console.log("update statusv ok ");	
+    	  	res.send("ok");
+    	  	res.end();
+    	  }
+    	});
+    }
+    setStatusvUpdate();
+});
 
 
 
@@ -144,10 +162,10 @@ app.post('/send',urlencodedParser,function(req,res){
 	// var oldName = "鄒雅雯";
 	var GCMcollection = gcmDB.collection('pushassociations');
     var collection = myDB.collection('login'); 
-    var leftLongitude = longitude-0.2;
-    var rightLongitude = longitude + 0.2;
-    var leftLatitude = latitude - 0.2;
-    var rightLatitude = latitude +0.2; 
+    var leftLongitude = longitude - 1.0;
+    var rightLongitude = longitude + 1.0;
+    var leftLatitude = latitude - 1.0;
+    var rightLatitude = latitude + 1.0; 
     //console.log("leftLongitude = "+leftLongitude +" rightLongitude = "+ rightLongitude
     //    + " leftLatitude = "+leftLatitude +" rightLatitude = " + rightLatitude); 
     //查詢user位置是否在範圍內 將user 帳號擺入陣列
@@ -163,15 +181,7 @@ app.post('/send',urlencodedParser,function(req,res){
 				}
 			});
     }
-    function setStatusvUpdate(){
-    	collection.update({"old_detail.beaconId":beaconId},{$set:{"old_detail.$.statusv":"1"}},function(err) {
-    	  if(err){
-    	  	console.log(err);
-    	  }else{
-    	  	console.log("update statusv ok ");	
-    	  }
-    	});
-    }
+    
    // var setNearbyUserToAry =function (docs,setTokenv){
    // 	console.log("in 1");
    // 	var user = [];
@@ -213,7 +223,7 @@ app.post('/send',urlencodedParser,function(req,res){
             return err;
         }else{
        		if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
-       			setStatusvUpdate();
+       			
        			//setNearbyUserToAry(docs);
             for(var i = 0 ; i< docs.length ; i++){
                 console.log(docs[i].user);
@@ -852,8 +862,7 @@ app.post('/testMail',urlencodedParser,function(req,res){
 });
 
 app.post('/register',urlencodedParser,function(req,res){
-	console.log("in register app");
-    var user_name = req.body.user;
+	var user_name = req.body.user;
 	var user_password = req.body.password;
 	var user_email = req.body.email;
 	var mf = md5(Math.random());
@@ -884,7 +893,6 @@ app.post('/register',urlencodedParser,function(req,res){
 		"comfirm" : 0,
 		"mf" : mf,
 		"pic":"",
-		"status":"1",
 		"myGroup":[],
 		"detail" : {
 			"userName":"",
