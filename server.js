@@ -168,7 +168,17 @@ app.post('/send',urlencodedParser,function(req,res){
     //    + " leftLatitude = "+leftLatitude +" rightLatitude = " + rightLatitude); 
     //查詢user位置是否在範圍內 將user 帳號擺入陣列
     //aa方法處理完成後呼叫gcmpush
-
+    //更新使用者目前位置，以便在地圖上標出地點
+    setLocationupdate();
+	function  setLocationupdate(){
+		collection.update({"user":user},{$set:{"detail.longitude":longitude,"detail.latitude":latitude}},function(err){
+			if(err){
+				res.send(err);
+			}
+			console.log("location is updated");
+		});
+	
+	}
    function setStatusvUpdate(){
 		
     	collection.update({"old_detail.beaconId":beaconId},{$set:{"old_detail.$.statusv":"1"}},function(err) {
