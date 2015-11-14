@@ -104,7 +104,113 @@ app.get('/', function(req, res) {
 	res.status(200).send(html);
 	res.end();
 });
-
+app.post('/findReport',urlencodedParser,function(req,res){
+	var user = req.body.user;
+	var beaconId = req.body.beaconId;
+	var oldName = req.body.oldName
+    var longitude = parseFloat(req.body.longitude);
+    var latitude = parseFloat(req.body.latitude);
+	var GCMcollection = gcmDB.collection('pushassociations');
+    var collection = myDB.collection('login'); 
+   	var registration_ids = [];
+   	var datetime = String((new Date().getTime()));
+	var message = new gcm.Message({
+		id: 1,
+		collapseKey: 'demo',
+		data: {
+		
+		},
+		notification: {
+			title: "Hello, World",
+			icon: "ic_launcher",
+			body: "This is a notification that will be displayed ASAP."
+		}
+	});
+	
+	message.addData("message", oldName+" 的位置被人發現,請查看地圖");
+	message.addData("longitude" , longitude);
+	message.addData("latitude", latitude);
+	message.addData("datetime",datetime);
+	console.log(datetime);
+	var gcm_connection = new gcm.Sender("AIzaSyD7ri5BkzqDX4ZzZDK9XfSnAjpw-Md8Ptc");
+	//更新地點
+	updateLocation();
+	//執行GCM
+    aa(function(user){bb(user);});
+    function aa(callback){
+    	var user = [];
+ 		
+ 		collection.find({"old_detail.beaconId":beaconId}).toArray(function(err,docs){
+		if(err){
+			console.log(err);
+		}else{
+			for(var i = 0 ; i< docs.length ; i++){
+ 				user.push(docs[i].user);
+ 				console.log(docs[i].user);
+				
+			}
+ 			callback(user);
+		}
+		});
+    	
+    }
+    function bb(user){
+    	console.log("bb.user = "+user);
+    	
+		GCMcollection.find({"user":{ $in:user}}).toArray(function(err,docs2){
+                	if(err){
+                		res.send(err);
+                		res.end();
+                	}else{
+                		if (typeof docs2[0] !== 'undefined' && docs2[0] !== null ) { 
+                			// for (var i =0;i<docs2.length;i++){
+                			// 	console.log("token:"+docs2[i].token);
+                			// 	registration_ids.push(docs2[i].token);	
+                			// }
+                			ba(function(registration_ids){ cc(registration_ids);},docs2);
+							
+                		}else{
+                			console.log("gcm no user around");
+                		}
+					}	
+                });
+		
+    }	
+    function cc(registration_ids){
+    	console.log(registration_ids);
+   			gcm_connection.send(message, registration_ids, 4, function(err, result) {
+								if (err) {  res.send(err);}
+								if(result){
+									console.log(result);
+									res.send("ok");
+									res.end();
+								}
+			});	
+    }
+    function ba(callback,docs2){
+    		for (var i =0;i<docs2.length;i++){
+                console.log("token:"+docs2[i].token);
+               	registration_ids.push(docs2[i].token);	
+            }
+       	callback(registration_ids);
+    }
+	function updateLocation(){
+		collection.update({"old_detail.beaconId":beaconId},{$push:{"old_detail.$.location":{"longitude":longitude,"latitude":latitude,"datetime":datetime}}},function(err) {
+    	  if(err){
+    	  	console.log(err);
+    	  }else{
+    	  	console.log("update location ok ");	
+    	  	
+    	  }
+    	});
+	}
+    
+	
+	
+	
+	
+	
+});
 app.post('/updateStatusv',urlencodedParser,function(req, res){
 	var collection = myDB.collection('login'); 
 	var beaconId = req.body.beaconId;
@@ -169,16 +275,9 @@ app.post('/send',urlencodedParser,function(req,res){
     //查詢user位置是否在範圍內 將user 帳號擺入陣列
     //aa方法處理完成後呼叫gcmpush
     //更新使用者目前位置，以便在地圖上標出地點
-    setLocationupdate();
-	function  setLocationupdate(){
-		collection.update({"user":user},{$set:{"detail.longitude":longitude,"detail.latitude":latitude}},function(err){
-			if(err){
-				res.send(err);
-			}
-			console.log("location is updated");
-		});
+    // setLocationupdate();
+    updateLocation();
 	
-	}
    function setStatusvUpdate(){
 		
     	collection.update({"old_detail.beaconId":beaconId},{$set:{"old_detail.$.statusv":"1"}},function(err) {
@@ -209,6 +308,16 @@ app.post('/send',urlencodedParser,function(req,res){
 	// 							console.log(result);
 	// 							}
 	// 						});	
+	function updateLocation(){
+		collection.update({"old_detail.beaconId":beaconId},{$set:{"old_detail.$.reportLocation.longitude":longitude,"old_detail.$.reportLocation.latitude":latitude,"old_detail.$.reportLocation.datetime":new Date().getTime().toString()}},function(err) {
+    	  if(err){
+    	  	console.log(err);
+    	  }else{
+    	  	console.log("update location ok ");	
+    	  	
+    	  }
+    	});
+	}
     function aa(callback,docs){
     	var user = [];
  		for(var i = 0 ; i< docs.length ; i++){
@@ -392,7 +501,9 @@ app.post('/addOld',urlencodedParser,function(req, res) {
 				"oldhistory":oldhistory,
 				"oldclothes":oldclothes,
 				"oldaddr":oldaddr,
-				"groupMember":[],"statusv":"0"}}},  function(err) {
+				"groupMember":[],
+				"statusv":"0",
+				"reportLocation":{}}}},  function(err) {
 				if(err){
 					console.log(err);	
 					res.send(err);
@@ -947,7 +1058,7 @@ app.post('/register',urlencodedParser,function(req,res){
 			"reward":"",
 			"location":"",
 			"longitude" :null ,
-			"latitude" : null,
+			"latitude" : null
 		},
 		"old_detail":[/*{
 			"beaconId":"",
