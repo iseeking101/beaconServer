@@ -74,7 +74,7 @@ http.get("/logout", function(req, res){
 app.get('/', function(req, res) {
 	
  
-	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/updateStatusv" method="post">' +
+	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/send" method="post">' +
                'Enter your name:' +
                '<input type="text" name="user" placeholder="user" />' +
 			   '<input type="text" name="oldName" placeholder="oldName" />' +
@@ -238,7 +238,55 @@ app.post('/updateStatusv',urlencodedParser,function(req, res){
 app.post('/send',urlencodedParser,function(req,res){
 
   //req.body.longitude,req.body.latitude
-    
+   
+    function aa(callback,docs) {
+    	var user = [];
+ 		for(var i = 0 ; i< docs.length ; i++){
+ 			user.push(docs[i].user);
+ 		}
+    	callback(user);
+    }
+    function bb(user){
+    	console.log("bb.user = "+user);
+    	
+		GCMcollection.find({"user":{ $in:user}}).toArray(function(err,docs2){
+                	if(err){
+                		res.send(err);
+                		res.end();
+                	}else{
+                		if (typeof docs2[0] !== 'undefined' && docs2[0] !== null ) { 
+                			// for (var i =0;i<docs2.length;i++){
+                			// 	console.log("token:"+docs2[i].token);
+                			// 	registration_ids.push(docs2[i].token);	
+                			// }
+                			ba(function(registration_ids){ cc(registration_ids);},docs2);
+							
+                		}else{
+                			console.log("gcm no user around");
+                		}
+					}	
+                });
+		
+    }	
+    function cc(registration_ids){
+    	console.log(registration_ids);
+   			gcm_connection.send(message, registration_ids, 4, function(err, result) {
+								if (err) {  res.send(err);}
+								if(result){
+								console.log(result);
+								res.status('200').send('ok');
+								res.end();
+								}
+							});	
+    }
+    function ba(callback,docs2){
+    		for (var i =0;i<docs2.length;i++){
+                console.log("token:"+docs2[i].token);
+               	registration_ids.push(docs2[i].token);	
+            }
+       	callback(registration_ids);
+    }
+
 	var registration_ids = [];
 	var message = new gcm.Message({
 		id: 1,
@@ -270,6 +318,8 @@ app.post('/send',urlencodedParser,function(req,res){
     var rightLongitude = longitude + 1.0;
     var leftLatitude = latitude - 1.0;
     var rightLatitude = latitude + 1.0; 
+    var where = {"detail.longitude":{"$gt":leftLongitude,"$lt":rightLongitude},"detail.latitude":{"$gt":leftLatitude,"$lt":rightLatitude}};
+   
     //console.log("leftLongitude = "+leftLongitude +" rightLongitude = "+ rightLongitude
     //    + " leftLatitude = "+leftLatitude +" rightLatitude = " + rightLatitude); 
     //查詢user位置是否在範圍內 將user 帳號擺入陣列
@@ -320,55 +370,7 @@ app.post('/send',urlencodedParser,function(req,res){
 	// 							}
 	// 						});	
 	
-    function aa(callback,docs){
-    	var user = [];
- 		for(var i = 0 ; i< docs.length ; i++){
- 			user.push(docs[i].user);
- 		}
-    	callback(user);
-    }
-    function bb(user){
-    	console.log("bb.user = "+user);
-    	
-		GCMcollection.find({"user":{ $in:user}}).toArray(function(err,docs2){
-                	if(err){
-                		res.send(err);
-                		res.end();
-                	}else{
-                		if (typeof docs2[0] !== 'undefined' && docs2[0] !== null ) { 
-                			// for (var i =0;i<docs2.length;i++){
-                			// 	console.log("token:"+docs2[i].token);
-                			// 	registration_ids.push(docs2[i].token);	
-                			// }
-                			ba(function(registration_ids){ cc(registration_ids);},docs2);
-							
-                		}else{
-                			console.log("gcm no user around");
-                		}
-					}	
-                });
-		
-    }	
-    function cc(registration_ids){
-    	console.log(registration_ids);
-   			gcm_connection.send(message, registration_ids, 4, function(err, result) {
-								if (err) {  res.send(err);}
-								if(result){
-								console.log(result);
-								res.status('200').send('ok');
-								res.end();
-								}
-							});	
-    }
-    function ba(callback,docs2){
-    		for (var i =0;i<docs2.length;i++){
-                console.log("token:"+docs2[i].token);
-               	registration_ids.push(docs2[i].token);	
-            }
-       	callback(registration_ids);
-    }
-
-    var where = {"detail.longitude":{"$gt":leftLongitude,"$lt":rightLongitude},"detail.latitude":{"$gt":leftLatitude,"$lt":rightLatitude}};
+    
     collection.find(where).toArray(function(err,docs){
         if(err){
             console.log(err);
