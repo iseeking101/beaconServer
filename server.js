@@ -74,7 +74,7 @@ http.get("/logout", function(req, res){
 app.get('/', function(req, res) {
 	
  
-	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/send" method="post">' +
+	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/updateStatusv" method="post">' +
                'Enter your name:' +
                '<input type="text" name="user" placeholder="user" />' +
 			   '<input type="text" name="oldName" placeholder="oldName" />' +
@@ -216,7 +216,7 @@ app.post('/updateStatusv',urlencodedParser,function(req, res){
 	var beaconId = req.body.beaconId;
     function setStatusvUpdate(){
 		
-    	collection.update({"old_detail.beaconId":beaconId},{$set:{"old_detail.$.statusv":"0"}},function(err) {
+    	collection.update({"old_detail.beaconId":beaconId},{$set:{"old_detail.$.statusv":"0","old_detail.$.location":[]}},function(err) {
     	  if(err){
     	  	console.log(err);
     	  	res.send(err);
@@ -276,6 +276,16 @@ app.post('/send',urlencodedParser,function(req,res){
     //aa方法處理完成後呼叫gcmpush
     //更新使用者目前位置，以便在地圖上標出地點
     // setLocationupdate();
+    function updateLocation(){
+		collection.update({"old_detail.beaconId":beaconId},{$set:{"old_detail.$.reportLocation.longitude":longitude,"old_detail.$.reportLocation.latitude":latitude,"old_detail.$.reportLocation.datetime":new Date().getTime().toString()}},function(err) {
+    	  if(err){
+    	  	console.log(err);
+    	  }else{
+    	  	console.log("update location ok ");	
+    	  	
+    	  }
+    	});
+	}
     updateLocation();
 	
    function setStatusvUpdate(){
@@ -296,6 +306,7 @@ app.post('/send',urlencodedParser,function(req,res){
 	message.addData("message",oldName+"  在您的附近走失了，請幫忙注意，謝謝!");
 	message.addData("longitude" , longitude);
 	message.addData("latitude", latitude);
+	message.addData("datetime",new Date().getTime().toString()),
 	// registration_ids.push("APA91bHOQez8fEHFZWLr97fvb7HxxfXcUPOHQ_XCEs1KSX0bmY8Xeq5SPqrdLgdrC5GCR6NG7m0bvxJoOVxw4mK5VHA3NSwXyuc7ibzNeick_0CuPutlQcUtmorgAoE9gXUFt0hWHRsw");
 	// registration_ids.push("APA91bHOQez8fEHFZWLr97fvb7HxxfXcUPOHQ_XCEs1KSX0bmY8Xeq5SPqrdLgdrC5GCR6NG7m0bvxJoOVxw4mK5VHA3NSwXyuc7ibzNeick_0CuPutlQcUtmorgAoE9gXUFt0hWHRsw");
 	// registration_ids.push("APA91bGmIcsXRlgYgQaRysqUVMlfCbsuKCXbHJJsyd2_R8xWataHDns-pDXp_JuIbg8dbio0eEMBtGuDacBKGDbhQMQ0ElpG-Rzwuq42FOkiihLA56B9PaimHlnMGJS5PJoM-G28Mj8J");
@@ -308,16 +319,7 @@ app.post('/send',urlencodedParser,function(req,res){
 	// 							console.log(result);
 	// 							}
 	// 						});	
-	function updateLocation(){
-		collection.update({"old_detail.beaconId":beaconId},{$set:{"old_detail.$.reportLocation.longitude":longitude,"old_detail.$.reportLocation.latitude":latitude,"old_detail.$.reportLocation.datetime":new Date().getTime().toString()}},function(err) {
-    	  if(err){
-    	  	console.log(err);
-    	  }else{
-    	  	console.log("update location ok ");	
-    	  	
-    	  }
-    	});
-	}
+	
     function aa(callback,docs){
     	var user = [];
  		for(var i = 0 ; i< docs.length ; i++){
@@ -420,14 +422,13 @@ app.post('/send',urlencodedParser,function(req,res){
 
 app.post('/getMissingOld',urlencodedParser,function(req,res){
 	var collection = myDB.collection('login');
-	var whereStatus = {"status":"1"};
 	collection.find({"old_detail.statusv":"1"}).toArray(function(err,docs){
 		if(err){
 			res.status(406).send(err);
 			res.end();
 		}else{
 			if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
-				var old_detail
+				
 				res.type('application/json');
 				//只列失蹤老人
 				// for(var i =0;i<docs.length;i++){
