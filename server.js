@@ -74,7 +74,7 @@ http.get("/logout", function(req, res){
 app.get('/', function(req, res) {
 	
  
-	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/send" method="post">' +
+	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/findReport" method="post">' +
                'Enter your name:' +
                '<input type="text" name="user" placeholder="user" />' +
 			   '<input type="text" name="oldName" placeholder="oldName" />' +
@@ -737,8 +737,6 @@ app.post('/groupService',urlencodedParser,function(req,res){
 	// 		});
 		
 	// }
-	res.send("no status !");
-	res.end();
 });
 //已修正返回使用者帳號
 app.post('/getWhoFollowMe',urlencodedParser,function(req, res) {
