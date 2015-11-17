@@ -74,7 +74,7 @@ http.get("/logout", function(req, res){
 app.get('/', function(req, res) {
 	
  
-	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/findReport" method="post">' +
+	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/groupService" method="post">' +
                'Enter your name:' +
                '<input type="text" name="user" placeholder="user" />' +
 			   '<input type="text" name="oldName" placeholder="oldName" />' +
@@ -231,6 +231,28 @@ app.post('/updateStatusv',urlencodedParser,function(req, res){
     setStatusvUpdate();
 });
 
+app.post('/setMemberLocation',urlencodedParser,function(req, res){
+	var collection = myDB.collection('login'); 
+	var beaconId = req.body.beaconId;
+    var longitude = parseFloat(req.body.longitude);
+    var latitude = parseFloat(req.body.latitude);
+	var user = req.body.user;
+    function setStatusvUpdate(){
+		
+    	collection.update({"user":user},{$set:{"detail.location":location,"detail.longitude":longitude,"detail.latitude":latitude}},function(err) {
+    	  if(err){
+    	  	console.log(err);
+    	  	res.send(err);
+    	  	res.end();
+    	  }else{
+    	  	console.log("update statusv ok ");	
+    	  	res.send("ok");
+    	  	res.end();
+    	  }
+    	});
+    }
+    setStatusvUpdate();
+});
 
 
 
@@ -238,7 +260,10 @@ app.post('/updateStatusv',urlencodedParser,function(req, res){
 app.post('/send',urlencodedParser,function(req,res){
 
   //req.body.longitude,req.body.latitude
-   
+   var registeration_idss = [ 'APA91bEkxT8KlFWsu42wvOYk-TA95z8jp1wUemVwHoxmJWxl-tRbmweoSsquMYljS2cmHy2M1Od6EShQqkytfFVvFM_DrXppm3CVYjdK1Ukr30Lf1gsUUTCEMi_YczV9dV10fo_6mpmr',
+  'APA91bH3trMgkVJA6FEbEbK6BZzNawDHsqfq7SU8UK3kJyVxq3t4sZW4XgZlsRegDQpoxnKmtq-tl0T4OsNAvL-3DVeMtPEacy7UkKMaU6eA_X49erYkRcLXev019iz1lD6w-7Mzt26P',
+  'APA91bEzwLHIwwMT1pFsq1-5ydH4bkEJTjtNI4P9hjrOOkSI9oJMW-vdkr4LoSf1EcFZlDv5lyfa7fd3bjC3G7Ubt0bXVdXC1PJlG9YE73HIaqXXsObdtW4hXiOl9fRFDpZLAdp0TS_0' ];
+
     function aa(callback,docs) {
     	var user = [];
  		for(var i = 0 ; i< docs.length ; i++){
@@ -270,14 +295,16 @@ app.post('/send',urlencodedParser,function(req,res){
     }	
     function cc(registration_ids){
     	console.log(registration_ids);
+        
    			gcm_connection.send(message, registration_ids, 4, function(err, result) {
 								if (err) {  res.send(err);}
 								if(result){
 								console.log(result);
-								res.status('200').send('ok');
+								res.send("ok");
 								res.end();
 								}
 							});	
+							
     }
     function ba(callback,docs2){
     		for (var i =0;i<docs2.length;i++){
@@ -432,7 +459,7 @@ app.post('/getMissingOld',urlencodedParser,function(req,res){
 			if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
 				
 				res.type('application/json');
-				//只列失蹤老人
+				//只列失蹤���人
 				// for(var i =0;i<docs.length;i++){
 				// 	for(var j =0;j<docs[i].old_detail.length;j++){
 				// 		if(docs[i].old_detail[j].statusv=="0"){
@@ -680,63 +707,31 @@ app.post('/groupService',urlencodedParser,function(req,res){
 		});
 	
 	}
-	//2 for getAllGroupMember.
-	if(statusv == "2"){
-		//"old_detail.groupMember":{$exists:true}
-		//此查詢會回傳old_detail內的第一筆資料{"user":user,"old_detail.beaconId":beaconId},{"old_detail.$":1}
-		collection.find( {"user":user,"old_detail.beaconId":beaconId,"old_detail.groupMember":{$exists:true}}).toArray(function(err,docs){
-			if(err){
-				res.status(406).send(err);
-				res.end();
-			}else{
-				if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
-					res.type('application/json');
-					// var jsonData = JSON.stringify(docs);
-					// var jsonObj = JSON.parse(jsonData);
-					// console.log(jsonObj[0].detail.userName);
-					res.status(200).send(docs);
-					res.end();
-				}else{
-					res.type('text/plain');
-					res.status(200).send("no detail");
-					res.end();
-				}
-			}
-		});
-	}
-	//取得groupMember中含有自己帳號的老人資料 返回給app
-	
-	//判斷某物件裡有沒有資料
-	// if(req.body.status == "4" ){
-	// 	//查beaconid 有沒有登入,沒有就不能進入群組
-	// 	collection.find({"user":req.body.user}).toArray(function(err, docs) {
-	// 			if(err){
-	// 				res.status(406).send(err);
+	// //2 for getAllGroupMember.
+	// if(statusv == "2"){
+	// 	//"old_detail.groupMember":{$exists:true}
+	// 	//此查詢會回傳old_detail內的第一筆資料{"user":user,"old_detail.beaconId":beaconId},{"old_detail.$":1}
+	// 	collection.find( {"user":user,"old_detail.beaconId":beaconId,"old_detail.groupMember":{$exists:true}}).toArray(function(err,docs){
+	// 		if(err){
+	// 			res.status(406).send(err);
+	// 			res.end();
+	// 		}else{
+	// 			if (typeof docs[0] !== 'undefined' && docs[0] !== null ) { 
+	// 				res.type('application/json');
+	// 				// var jsonData = JSON.stringify(docs);
+	// 				// var jsonObj = JSON.parse(jsonData);
+	// 				// console.log(jsonObj[0].detail.userName);
+	// 				res.status(200).send(docs);
 	// 				res.end();
 	// 			}else{
-	// 				if ( typeof docs[0].old_detail.beaconId !== 'undefined' && docs[0].old_detail.beaconId !== null && docs[0].old_detail.beaconId !== ""  ) { 
-	// 						res.type("text/plain");
-	// 						 //var jsonData = JSON.stringify(docs);
-	// 						 //var jsonObj = JSON.parse(jsonData);
-	// 						// for(var i = 0 ; i < docs.length ; i++){
-								
-	// 						// 	oldNames += jsonObj[i].old_detail.oldName;
-	// 						// 	if(i<(docs.length)-1){
-	// 						// 		oldNames += ",";
-	// 						// 	}
-	// 						// }
-	// 						//console.log("beaconId= "+docs[0].old_detail.beaconId+" ,  "+  (typeof docs[0].old_detail.beaconId)+" ,user = "+docs[0].user );
-	// 						res.status(200).send("ok");
-	// 						res.end();
-	// 				}else{
-	// 					res.type("text/plain");
-	// 					res.status(200).send("nothing");
-	// 					res.end();
-	// 				}
+	// 				res.type('text/plain');
+	// 				res.status(200).send("no detail");
+	// 				res.end();
 	// 			}
-	// 		});
-		
+	// 		}
+	// 	});
 	// }
+	
 });
 //已修正返回使用者帳號
 app.post('/getWhoFollowMe',urlencodedParser,function(req, res) {
