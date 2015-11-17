@@ -235,7 +235,7 @@ app.post('/setMemberLocation',urlencodedParser,function(req, res){
 	var collection = myDB.collection('login'); 
 	var longitude = parseFloat(req.body.longitude);
     var latitude = parseFloat(req.body.latitude);
-    var location = req.body.location;
+    var location = req.body.longitude+","+req.body.latitude;
 	var user = req.body.user;
     function setMemberLocation(){
 		
