@@ -74,7 +74,7 @@ http.get("/logout", function(req, res){
 app.get('/', function(req, res) {
 	
  
-	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/groupService" method="post">' +
+	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/setMemberLocation" method="post">' +
                'Enter your name:' +
                '<input type="text" name="user" placeholder="user" />' +
 			   '<input type="text" name="oldName" placeholder="oldName" />' +
@@ -233,11 +233,11 @@ app.post('/updateStatusv',urlencodedParser,function(req, res){
 
 app.post('/setMemberLocation',urlencodedParser,function(req, res){
 	var collection = myDB.collection('login'); 
-	var beaconId = req.body.beaconId;
-    var longitude = parseFloat(req.body.longitude);
+	var longitude = parseFloat(req.body.longitude);
     var latitude = parseFloat(req.body.latitude);
+    var location = req.body.location;
 	var user = req.body.user;
-    function setStatusvUpdate(){
+    function setMemberLocation(){
 		
     	collection.update({"user":user},{$set:{"detail.location":location,"detail.longitude":longitude,"detail.latitude":latitude}},function(err) {
     	  if(err){
@@ -251,7 +251,7 @@ app.post('/setMemberLocation',urlencodedParser,function(req, res){
     	  }
     	});
     }
-    setStatusvUpdate();
+    setMemberLocation();
 });
 
 
