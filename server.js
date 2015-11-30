@@ -74,7 +74,7 @@ http.get("/logout", function(req, res){
 app.get('/', function(req, res) {
 	
  
-	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/setMemberLocation" method="post">' +
+	var html = '<p>welcome tracking of missing uncle!</p>'+'<form action="/findReport" method="post">' +
                'Enter your name:' +
                '<input type="text" name="user" placeholder="user" />' +
 			   '<input type="text" name="oldName" placeholder="oldName" />' +
@@ -128,36 +128,39 @@ app.post('/findReport',urlencodedParser,function(req,res){
 	});
 	
 	message.addData("message", oldName+" 的位置被人發現,請查看地圖");
+
 	message.addData("longitude" , longitude);
 	message.addData("latitude", latitude);
 	message.addData("datetime",datetime);
+	message.addData("beaconId",beaconId);
 	console.log(datetime);
 	var gcm_connection = new gcm.Sender("AIzaSyD7ri5BkzqDX4ZzZDK9XfSnAjpw-Md8Ptc");
 	//更新地點
 	updateLocation();
 	//執行GCM
-    aa(function(user){bb(user);});
+    aa(function(userv){bb(userv);});
     function aa(callback){
-    	var user = [];
+    	var userv = [];
  		
  		collection.find({"old_detail.beaconId":beaconId}).toArray(function(err,docs){
 		if(err){
 			console.log(err);
 		}else{
 			for(var i = 0 ; i< docs.length ; i++){
- 				user.push(docs[i].user);
+ 				userv.push(docs[i].user);
  				console.log(docs[i].user);
 				
 			}
- 			callback(user);
+ 			callback(userv);
 		}
 		});
     	
     }
-    function bb(user){
-    	console.log("bb.user = "+user);
-    	
-		GCMcollection.find({"user":{ $in:user}}).toArray(function(err,docs2){
+    function bb(userv){
+    	console.log("bb.user = "+userv);
+    	console.log(userv);
+    	message.addData("user",userv[0]);
+		GCMcollection.find({"user":{ $in:userv}}).toArray(function(err,docs2){
                 	if(err){
                 		res.send(err);
                 		res.end();
@@ -230,7 +233,27 @@ app.post('/updateStatusv',urlencodedParser,function(req, res){
     }
     setStatusvUpdate();
 });
+app.post('/deleteOldMan',urlencodedParser,function(req, res) {
+    var beaconId =req.body.beaconId;
+    var collection = myDB.collection('login'); 
+	function setMemberLocation(){
+		
+    	collection.remove({"old_detail.beaconId":beaconId},function(err) {
+    	  if(err){
+    	  	console.log(err);
+    	  	res.send(err);
+    	  	res.end();
+    	  }else{
+    	  	console.log("update statusv ok ");	
+    	  	res.send("ok");
+    	  	res.end();
+    	  }
+    	});
+    }
+    setMemberLocation();
 
+    
+});
 app.post('/setMemberLocation',urlencodedParser,function(req, res){
 	var collection = myDB.collection('login'); 
 	var longitude = parseFloat(req.body.longitude);
@@ -380,9 +403,10 @@ app.post('/send',urlencodedParser,function(req,res){
     	  }
     	});
     }
-	message.addData("message",oldName+"  在您的附近走失了，請幫忙注意，謝謝!");
+	message.addData("message",oldName+"  在您的附近走失了，請幫忙注�����，謝謝!");
 	message.addData("longitude" , longitude);
 	message.addData("latitude", latitude);
+	message.addData("beaconId",beaconId);
 	message.addData("datetime",new Date().getTime().toString()),
 	// registration_ids.push("APA91bHOQez8fEHFZWLr97fvb7HxxfXcUPOHQ_XCEs1KSX0bmY8Xeq5SPqrdLgdrC5GCR6NG7m0bvxJoOVxw4mK5VHA3NSwXyuc7ibzNeick_0CuPutlQcUtmorgAoE9gXUFt0hWHRsw");
 	// registration_ids.push("APA91bHOQez8fEHFZWLr97fvb7HxxfXcUPOHQ_XCEs1KSX0bmY8Xeq5SPqrdLgdrC5GCR6NG7m0bvxJoOVxw4mK5VHA3NSwXyuc7ibzNeick_0CuPutlQcUtmorgAoE9gXUFt0hWHRsw");
@@ -900,7 +924,7 @@ app.post('/updateMember',urlencodedParser,function(req,res){
     var latitude = parseFloat(req.body.latitude);
  	var collection = myDB.collection('login');
 	var whereName = {"user": user};
-	//經緯度是"null"將其指定為null，接收的經緯度是字串 將其轉為float
+	//經緯度是"null"將其指���為null，接收的經緯度是字串 將其轉為float
     if (!isNaN(longitude)) {
     	//is number part
            longitude = parseFloat(req.body.longitude);
