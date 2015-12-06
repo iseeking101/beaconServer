@@ -403,7 +403,9 @@ app.post('/send',urlencodedParser,function(req,res){
     	  }
     	});
     }
-	message.addData("message",oldName+"  在您的附近走失了，請幫忙注�����，謝謝!");
+    //2表示請求協助
+    message.addData("codev","2");
+	message.addData("message",oldName+"  在您的附近走失了，請幫忙注意!");
 	message.addData("longitude" , longitude);
 	message.addData("latitude", latitude);
 	message.addData("beaconId",beaconId);
